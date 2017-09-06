@@ -56,7 +56,7 @@ read_in_and_add <- function(file, df) {
 
 ### MAIN ###
 #Read in the files 3 at a time. The files should be submitted by chromosome in order of full tad and flares
-for ( i in 1:3:length(args) ) {
+for ( i in seq(1,3,length(args)) ) {
   read_in_and_add(args[i], full_background)
   read_in_and_add(args[i+1], tad)
   read_in_and_add(args[i+2], landf)
