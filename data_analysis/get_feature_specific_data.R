@@ -3,6 +3,7 @@
 args = commandArgs(trailingOnly=TRUE) # What you need to pass in arguements
 
 library(getopt)
+library(plyr)
 
 
 #Handles input and puts the options passed into the program into a matrix
