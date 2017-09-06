@@ -89,6 +89,7 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   dist_vs_counts_tads <- ddply(dist_vs_counts_tads, "distance", summarize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
   flares_and_loops_dvc <- ddply(flares_and_loops_dvc, "distance", summarize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
   background_counts <- ddply(background_counts, "distance", summarize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
+  return(list(flares_and_loops_dvc, background_counts, dist_vs_counts_tads))
 }
 
 print_out_data <- function(name, dataframe, chr, out) {
@@ -96,8 +97,8 @@ print_out_data <- function(name, dataframe, chr, out) {
 }
 
 #### MAIN ####
-separate_loops_and_tads(opt$chromosome, loop_df, read_counts)
-print_out_data("loop_flare_", flares_and_loops_dvc, opt$chromosome, opt$out_dir)
-print_out_data("background_", background_counts, opt$chromosome, opt$out_dir)
-print_out_data("TADs_", dist_vs_avg_counts, opt$chromosome, opt$out_dir)
+graphs <- separate_loops_and_tads(opt$chromosome, loop_df, read_counts)
+print_out_data("loop_flare_", graphs[[1]], opt$chromosome, opt$out_dir)
+print_out_data("background_", graphs[[2]], opt$chromosome, opt$out_dir)
+print_out_data("TADs_", graphs[[3]], opt$chromosome, opt$out_dir)
 
