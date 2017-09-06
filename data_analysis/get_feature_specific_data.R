@@ -9,7 +9,7 @@ library(getopt)
 #Matrix makes it easier to look up values.
 params = matrix(c(
   "loop_file", "l", 1, "character",
-  "count_file", "c", 1, "character",
+  "count_file", "cf", 1, "character",
   "chromosome", "chr", 1, "integer",
   "out_dir", "o", 1, "character"
 ), byrow = TRUE, ncol = 4)
