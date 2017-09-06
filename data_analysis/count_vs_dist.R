@@ -28,10 +28,19 @@ dist_vs_avg_counts <- ddply(dist_vs_avg_counts, "distance", summarize, mean = me
 loop_matrix$achr <- as.character(loop_matrix$achr)
 loop_matrix$bchr <- as.character(loop_matrix$bchr)
 
+
+
 #### GLOBAL DISTANCE VS Signal CODE ###
 no_test_dist_vs_counts_tads <- matrix(ncol = 2)
 no_test_dist_vs_counts_tads <-as.data.frame(no_test_dist_vs_counts_tads)
 colnames(no_test_dist_vs_counts_tads) <- c("distance", "reads")
+
+flares_and_loops_dvc <- matrix(ncol=2)
+flares_and_loops_dvc <- as.data.frame(flares_and_loops_dvc)
+colnames(flares_and_loops_dvc) <- c("distance", "reads")
+
+data_used_vec <- c()
+
 for ( i in 1:length(loop_matrix$achr[loop_matrix$achr == "chr20"])) {
   #get individual loops
   lp_info <- loop_matrix[loop_matrix$achr == "chr20",][i,]
@@ -39,23 +48,71 @@ for ( i in 1:length(loop_matrix$achr[loop_matrix$achr == "chr20"])) {
   #need to get all the reads from bins equal to this and within it
   start <- (lp_info$abin_start/10000)
   end <- (lp_info$bbin_start/10000)
-  
-  for (j in 1:length(read_counts[read_counts$start >= start & read_counts$end <= end,]) ) {
-    mm_matrix <- data.frame((read_counts[read_counts$start > start & read_counts$end < end,][j,]$end - 
-                        read_counts[read_counts$start > start & read_counts$end < end,][j,]$start), 
-                        read_counts[read_counts$start > start & read_counts$end < end,][j,]$reads)
-    colnames(mm_matrix) <- colnames(no_test_dist_vs_counts_tads)
-    no_test_dist_vs_counts_tads <- rbind(no_test_dist_vs_counts_tads, mm_matrix)
+  adjust <- 2
+  flare_and_loop <- read_counts[read_counts$start >= (start-adjust) & read_counts$end <= (end+adjust),]
+  for (j in 1:length(flare_and_loop) ) {
+    #get TADS
+    if ( flare_and_loop[j,]$start > (start+adjust) && flare_and_loop[j,] < (end-adjust) ) {
+      mm_matrix <- data.frame((flare_and_loop[j,]$end - flare_and_loop[j,]$start), 
+                              flare_and_loop[j,]$reads)
+      colnames(mm_matrix) <- colnames(no_test_dist_vs_counts_tads)
+      no_test_dist_vs_counts_tads <- rbind(no_test_dist_vs_counts_tads, mm_matrix)
+    }
+    #get Flares
+    else {
+      mm_matrix <- data.frame((flare_and_loop[j,]$end - flare_and_loop[j,]$start), 
+                              flare_and_loop[j,]$reads)
+      colnames(mm_matrix) <- colnames(flares_and_loops_dvc)
+      flares_and_loops_dvc <- rbind(flares_and_loops_dvc, mm_matrix)
+    }
+    data_used_vec <- c(data_used_vec, (paste(as.character(flare_and_loop[j,]$start), ",", as.character(flare_and_loop[j,]$end))))
   }
 }
-
+data_used_vec <- unique(data_used_vec)
 graph_pot_tads <- ddply(no_test_dist_vs_counts_tads, "distance", summarize, means = mean(reads), sd = sd(reads))
+graph_pot_flares_and_loops <- ddply(flares_and_loops_dvc,"distance", summarize, means = mean(reads), sd = sd(reads))
+
+trial_counts <- read_counts[!(paste(as.character(read_counts$start), ",", as.character(read_counts$end)) %in% data_used_vec),]
+no_tad_or_loops <- data.frame(abs(trial_counts$end-trial_counts$start),trial_counts$reads)
+colnames(no_tad_or_loops) <- c("distance", "reads")
+no_tad_or_loops <- ddply(no_tad_or_loops, "distance", summarize, means = mean(reads), sd = sd(reads))
 
 #plot the signal vs distance curve
 plot(dist_vs_avg_counts$distance[dist_vs_avg_counts$distance<50], dist_vs_avg_counts$mean[dist_vs_avg_counts$distance<50],
      xlab = "Distance in 10KB", ylab = "Average Signal", col ="blue", type = "o", main="Signal vs. Distance")
 lines(graph_pot_tads$distance[graph_pot_tads$distance < 50], graph_pot_tads$mean[graph_pot_tads$distance < 50], col="red")
-legend(20, 1500,c("Global", "Within TADS"), lty = c(1,1), lwd = c(2,2), col=c("blue", "red"))
+lines(graph_pot_flares_and_loops$distance[graph_pot_flares_and_loops$distance < 50], graph_pot_flares_and_loops$mean[graph_pot_flares_and_loops$distance<50], col="green")
+lines(no_tad_or_loops$distance[no_tad_or_loops$distance < 50], no_tad_or_loops$means[no_tad_or_loops$distance < 50], col="purple")
+legend(20, 1500,c("Global", "Within TADS", "Flare & Loops"), lty = c(1,1), lwd = c(2,2), col=c("blue", "red", "green"))
+
+
+#### linear regression model ####
+tail(dist_vs_avg_counts)
+m<- lm( mean ~ distance, data = combined_graph[combined_graph$distance < 50 & combined_graph$model == "Loop&FL",c("distance", "means")] )
+summary(m)
+
+m <- nls( mean ~ a/(distance+1), data = dist_vs_avg_counts[dist_vs_avg_counts$distance<20,], start=list(a=2000))
+summary(m)
+
+ggplot( dist_vs_avg_counts[dist_vs_avg_counts$distance<50,], aes( x = distance, y= mean ))+
+  geom_point()+
+  geom_smooth(method = "nls", formula = y ~ a^exp(1)/(x+1),se = F, method.args = list(start = c(a = 3000)))+
+  ggtitle("Global Distance vs Mean NLM")+
+  theme(plot.title = element_text(hjust = .5))
+
+#combine the graph plots together to make model for all three signal vs distance
+no_tad_or_loops$model <- "Background"
+graph_pot_flares_and_loops$model <- "Loop&FL"
+graph_pot_tads$model <- "TADs"
+
+combined_graph <- rbind(no_tad_or_loops, graph_pot_flares_and_loops, graph_pot_tads)
+
+ggplot( combined_graph[combined_graph$distance < 50,], aes( x = distance, y = means, col=model))+
+  geom_line()+
+  #geom_smooth(aes(col=model), method = "nls", formula = y ~ a/(x+1), se = F, method.args = list(start = c(a=10000)) )+
+  ggtitle("Distance Vs Mean")+
+  theme(plot.title = element_text(hjust = .5))
+
 
 #Need to implement a test here - Does this look like a tad?
 #using an implementation of the arrowhead method that the Rao paper described (Thanks to Katie I sorta understand it)
@@ -72,11 +129,11 @@ for ( i in 1:length(loop_matrix$achr[loop_matrix$achr == "chr20"])) {
   bot_and_top_vecs <- arrowhead_location_vecs(start, end)
   
   #create an outer and inner value and perform a t-test on this.
-
+  list_of_df <- create_distance_vs_mean_matrices_for_comparison(read_counts, start, end, bot_and_top_vecs)
 }
 
 
-## Create Location Vectors ##
+#### Create Location Vectors #####
 #This creates a list of 4 vectors that represent the locations where we want to consider read counts
 arrowhead_location_vecs <- function( starting, ending ) {
   d <- ending - starting
@@ -126,17 +183,38 @@ arrowhead_location_vecs <- function( starting, ending ) {
 #test
 arrowhead_location_vecs(10,15)
 
-#linear regression model
-tail(dist_vs_avg_counts)
-m<- lm(mean ~ distance, data = dist_vs_avg_counts[dist_vs_avg_counts$distance<200,])
-summary(m)
 
-m <- nls( mean ~ a/(distance+1), data = dist_vs_avg_counts[dist_vs_avg_counts$distance<20,], start=list(a=2000))
-summary(m)
-
-ggplot( dist_vs_avg_counts[dist_vs_avg_counts$distance<20,], aes( x = distance, y= mean ))+
-  geom_point()+
-  geom_smooth(method = "nls", formula = y ~ a/(x+1),se = F, method.args = list(start = c(a = 3000)))
-
-
-
+#### Find counts from data ####
+create_distance_vs_mean_matrices_for_comparison <- function(reads_mat, start, end, vec_list) {
+  d <- end - start
+  
+  #create matrices
+  out_mat <- matrix(ncol = 2)
+  in_mat <- matrix(ncol = 2)
+  out_mat <- as.data.frame(out_mat)
+  in_mat <- as.data.frame(in_mat)
+  colnames(out_mat) <- c("distance", "reads")
+  colnames(in_mat) <- c("distance", "reads")
+  
+  condensed_mat <- reads_mat[reads_mat$start >= (start - d) & reads_mat <= (end + d),]
+  for ( i in 1:length(condensed_mat) ) {
+    #create string that might be found in our condensed matrix
+    line_string <- paste(condensed_mat$start[i], ",", condensed_mat$end[i])
+    #check to see if it goes in outside matrix
+    if ( line_string %in% vec_list[[1]] | line_string %in% vec_list[[2]]) {
+      mm_df <- data.frame( (condensed_mat$end[i] - condensed_mat$start[i]),
+                           condensed_mat$reads[i] )
+      colnames(mm_df) <- colnames(out_mat)
+      out_mat <- rbind(out_mat, mm_df)
+    }
+    #check to see if the info goes inside the matrix
+    else if ( line_string %in% vec_list[[3]] | line_string %in% vec_list[[4]] ) {
+      mm_df <- data.frame( (condensed_mat$end[i] - condensed_mat$start[i]),
+                           condensed_mat$reads[i] )
+      colnames(mm_df) <- colnames(in_mat)
+      in_mat <- rbind(in_mat, mm_df)
+    }
+  }
+  
+  return(list(out_mat, in_mat) )
+}
