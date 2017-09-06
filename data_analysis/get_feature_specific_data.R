@@ -90,7 +90,7 @@ print_out_data <- function(name, dataframe, chr, out) {
 }
 
 #### MAIN ####
-separate_loops_and_tads(opts$chromosome, loop_df, read_counts)
+separate_loops_and_tads(opt$chromosome, loop_df, read_counts)
 print_out_data("loop_flare_", flares_and_loops_dvc, opt$chromosome, opt$out_dir)
 print_out_data("background_", background_counts, opt$chromosome, opt$out_dir)
 print_out_data("TADs_", dist_vs_avg_counts, opt$chromosome, opt$out_dir)
