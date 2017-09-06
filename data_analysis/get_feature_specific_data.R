@@ -57,7 +57,7 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
     flare_and_loop <- read_counts[read_counts$start >= (start-adjust) & read_counts$end <= (end+adjust),]
     for (j in 1:length(flare_and_loop) ) {
       #get TADS
-      if ( flare_and_loop[j,]$start > (start+adjust) && flare_and_loop[j,] < (end-adjust) ) {
+      if ( (flare_and_loop[j,]$start > (start+adjust)) && (flare_and_loop[j,] < (end-adjust)) ) {
         mm_matrix <- data.frame((flare_and_loop[j,]$end - flare_and_loop[j,]$start), 
                                 flare_and_loop[j,]$reads)
         colnames(mm_matrix) <- colnames(dist_vs_counts_tads)
