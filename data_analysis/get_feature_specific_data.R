@@ -16,11 +16,11 @@ params = matrix(c(
 opt = getopt(params)
 
 #test
-opt <- c("l", "a", 1)
-names(opt) <- c("loop_file","count_file", "chromosome")
-opt$loop_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
-opt$count_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.chr20.10Kb.MQ30.KR_norm.mat"
-opt$chromosome <- 20
+#opt <- c("l", "a", 1)
+#names(opt) <- c("loop_file","count_file", "chromosome")
+#opt$loop_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
+#opt$count_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.chr20.10Kb.MQ30.KR_norm.mat"
+#opt$chromosome <- 20
 ### Read in data ###
 
 #loop data
