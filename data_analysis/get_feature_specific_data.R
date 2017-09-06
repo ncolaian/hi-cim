@@ -46,9 +46,9 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   data_used_vec <- c()
   
   #go through each loop from the chromosome given
-  for ( i in 1:length(loop_matrix$achr[loop_matrix$achr == chr])) {
+  for ( i in 1:length(loop_df$achr[loop_df$achr == chr])) {
     #get individual loops
-    lp_info <- loop_matrix[loop_matrix$achr == chr,][i,]
+    lp_info <- loop_df[loop_df$achr == chr,][i,]
     
     #need to get all the reads from bins equal to this and within it
     start <- (lp_info$abin_start/10000)
