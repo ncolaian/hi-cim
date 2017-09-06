@@ -15,6 +15,12 @@ params = matrix(c(
 ), byrow = TRUE, ncol = 4)
 opt = getopt(params)
 
+#test
+opt <- c("l", "a", 1)
+names(opt) <- c("loop_file","count_file", "chromosome")
+opt$loop_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
+opt$count_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.chr20.10Kb.MQ30.KR_norm.mat"
+opt$chromosome <- 20
 ### Read in data ###
 
 #loop data
@@ -44,17 +50,16 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   
   #set up vector to keep track of locations in a loop or flare
   data_used_vec <- c()
-  
+  chr <- paste("chr",chr, sep = "")
   #go through each loop from the chromosome given
   for ( i in 1:length(loop_df$achr[loop_df$achr == chr])) {
     #get individual loops
     lp_info <- loop_df[loop_df$achr == chr,][i,]
-    
     #need to get all the reads from bins equal to this and within it
     start <- (lp_info$abin_start/10000)
     end <- (lp_info$bbin_start/10000)
     adjust <- 2
-    flare_and_loop <- read_counts[read_counts$start >= (start-adjust) & read_counts$end <= (end+adjust),]
+    flare_and_loop <- rc_df[rc_df$start >= (start-adjust) & rc_df$end <= (end+adjust),]
     for (j in 1:length(flare_and_loop) ) {
       #get TADS
       if ( (flare_and_loop[j,]$start > (start+adjust)) && (flare_and_loop[j,] < (end-adjust)) ) {
@@ -75,14 +80,14 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   }
   #Create a data frame with all the data not in a tad or flare/loop
   data_used_vec <- unique(data_used_vec)
-  background_counts <- read_counts[!(paste(as.character(read_counts$start), ",", as.character(read_counts$end)) %in% data_used_vec),]
+  background_counts <- rc_df[!(paste(as.character(rc_df$start), ",", as.character(rc_df$end)) %in% data_used_vec),]
   background_counts <- data.frame(abs(background_counts$end - background_counts$start),background_counts$reads)
   colnames(background_counts) <- c("distance", "reads")
   
   #Use ddply to merge all the read counts for a particular distance into a mean. Also report the std
   dist_vs_counts_tads <- ddply(dist_vs_counts_tads, "distance", summarize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
-  flares_and_loops_dvc <- ddply(flares_and_loops_dvc, "distance", summerize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
-  background_counts <- ddply(background_counts, "distance", summerize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
+  flares_and_loops_dvc <- ddply(flares_and_loops_dvc, "distance", summarize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
+  background_counts <- ddply(background_counts, "distance", summarize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
 }
 
 print_out_data <- function(name, dataframe, chr, out) {
