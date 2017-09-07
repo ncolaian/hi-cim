@@ -56,7 +56,7 @@ read_in_and_add <- function(file, df) {
 
 ### MAIN ###
 #Read in the files 3 at a time. The files should be submitted by chromosome in order of full tad and flares
-for ( i in seq(1,3,length(args)) ) {
+for ( i in seq(2,3,length(args)) ) {
   read_in_and_add(args[i], full_background)
   read_in_and_add(args[i+1], tad)
   read_in_and_add(args[i+2], landf)
@@ -79,4 +79,5 @@ p <- ggplot( combined_data_frame[combined_data_frame$distance < 50,], aes( x = d
   ggtitle("Distance Vs Mean")+
   theme(plot.title = element_text(hjust = .5))
 
-ggsave("c_dist_vs_sig", p)
+ggsave(paste(args[1],"/c_dist_vs_sig.png",sep = ""), p)
+write.table(combined_data_frame, file = paste(args[1], "/full_sig_distance_all_things.txt", sep = ""), sep = "\t", row.names = FALSE)
