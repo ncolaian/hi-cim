@@ -28,6 +28,7 @@ pooled_stats <- function(data) {
   new_df <- as.data.frame(new_df)
   colnames(new_df) <- c("distance", "means","sd", "N")
   
+  data$sd[is.na(data$sd)] <- 0
   data$sd <- data$sd^2
   for ( i in data$distance ) {
     if ( !(i %in% new_df$distance) ) {
