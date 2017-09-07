@@ -24,9 +24,9 @@ colnames(landf) <- c("distance", "means","sd", "N")
 
 #### Function to read in files ####
 pooled_stats <- function(data) {
-  new_df -> matrix(col=4)
-  new_df -> as.data.frame(new_df)
-  colnames(new_df) -> c("distance", "means","sd", "N")
+  new_df <- matrix(col=4)
+  new_df <- as.data.frame(new_df)
+  colnames(new_df) <- c("distance", "means","sd", "N")
   
   data$sd <- data$sd^2
   for ( i in data$distance ) {
