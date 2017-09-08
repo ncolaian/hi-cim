@@ -66,16 +66,17 @@ sub get_count_file_names_for_each_chrom {
 	my @full_dir_files;
 	opendir(my $DIR, $dir) || die("$dir could not be found\n");
 	while (readdir($DIR)) {
+		next if ( $_ =~ /^\./ && qr/$just_name/ );
 		push @full_dir_files, $_;
 	}
 	closedir($DIR);
 	#fill a hash with file names
 	my %file;
-	foreach my $chr ( @$chrom_aref ) {
+	foreach my $chromo ( @$chrom_aref ) {
 		while ( @full_dir_files ) {
 			next if ( $_ =~ /^\./ );
-			if ( $_ =~ qr/$just_name/ && $_ =~ qr/$bin_length\Kb/ && $_ =~ qr/chr$chr/ ) {
-				$file{$chr} = "$dir/$_";
+			if ( $chromo =~ qr/$bin_length\Kb/ && $chromo =~ qr/chr$chr/ ) {
+				$file{$chromo} = "$dir/$_";
 			}
 		}
 	}
@@ -102,9 +103,9 @@ sub merge_matrice_and_create_dist_vs_sig_graph {
 	
 	my $cmd = "bsub -M 20 -J final -o $o/final.out Rscript $rbin/graph_tot_dist_sig.R $o"; #Command that will be ran
 	my @array = ("background_", "TADs_", "loop_flare");
-	foreach my $chr ( @$chrom_aref ) {
+	foreach my $chromo ( @$chrom_aref ) {
 		foreach my $name ( @array ) {
-			my $full_name = "$out/" . $name . $chr . ".txt";
+			my $full_name = "$out/" . $name . $chromo . ".txt";
 			$cmd .= " $full_name";
 		}
 	}
