@@ -73,6 +73,7 @@ sub get_count_file_names_for_each_chrom {
 				$file{$chr} = "$dir/$_";
 			}
 		}
+		close($DIR);
 	}
 	#return hash with count file names
 	return \%file;
