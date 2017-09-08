@@ -60,10 +60,11 @@ sub get_count_file_names_for_each_chrom {
 	$logger->info("Geting the count files for each chromosome");
 	my @dir_full = split( /\//, $bn);
 	my $just_name = pop(@dir_full);
+	print $dir;
 	my $dir = join("", @dir_full);
 	
 	my @full_dir_files;
-	opendir(my $DIR, $dir);
+	opendir(my $DIR, $dir) || die("$dir could not be found");
 	while (readdir($DIR)) {
 		push @full_dir_files, $_;
 	}
