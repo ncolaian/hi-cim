@@ -30,7 +30,7 @@ landf <- read.delim(args[4], sep = "\t", header = TRUE)
 pooled_stats <- function(data_df) {
   new_df <- matrix(ncol=4)
   new_df <- as.data.frame(new_df)
-  colnames(new_df) <- c("distance", "means","sd", "N")
+  colnames(new_df) <- c("distance", "total", "means","sd", "N")
   
   data_df$sd[is.na(data_df$sd)] <- 0
   data_df$sd <- data_df$sd^2
@@ -41,15 +41,16 @@ pooled_stats <- function(data_df) {
       data_portion <- data_df[data_df$distance == i,]
       data_portion <- na.omit(data_portion)
       if( nrow(data_portion) == 1 ) {
-        mm <- data.frame(i,data_portion$means[1], data_portion$sd[1],data_portion$N[1])
+        mm <- data.frame(i, data_portion$total, data_portion$means[1], data_portion$sd[1],data_portion$N[1])
       }
       else {
         total_N <- sum(data_portion$N-1)
+        tot <- sum(data_portion$total)
         t <- sum(data_portion$N)
         m <- sum(data_portion$means * ((data_portion$N-1)/total_N))
         v <- sum(data_portion$sd * ((data_portion$N-1)/total_N))
         sd <- sqrt(v)
-        mm <- data.frame(i,m,sd,t)
+        mm <- data.frame(i,tot,m,sd,t)
       }
       colnames(mm) <- colnames(new_df)
       new_df <- rbind(new_df, mm)
@@ -84,6 +85,11 @@ tad$model <- "TADs"
 full_background$model <- "Background"
 landf$model <- "Loop&FL"
 
+#Diff Mean
+tad$tot_mean <- tad$total/tad$N
+full_background$tot_mean <- full_background$total/full_background$N
+landf$tot_mean <- landf$total/landf$total
+
 combined_data_frame <- rbind(tad,full_background,landf)
 
 p <- ggplot( combined_data_frame[combined_data_frame$distance < 50,], aes( x = distance, y = means, col=model))+
@@ -91,5 +97,11 @@ p <- ggplot( combined_data_frame[combined_data_frame$distance < 50,], aes( x = d
   ggtitle("Distance Vs Mean")+
   theme(plot.title = element_text(hjust = .5))
 
+p2 <- ggplot( combined_data_frame[combined_data_frame$distance < 50,], aes( x = distance, y = tot_mean, col=model))+
+  geom_line()+
+  ggtitle("Distance Vs Mean")+
+  theme(plot.title = element_text(hjust = .5))
+
 ggsave(paste(args[1],"/c_dist_vs_sig.png",sep = ""), p)
+ggsave(paste(args[1],"/c_dist_vs_sig_tot.png",sep = ""), p2)
 write.table(combined_data_frame, file = paste(args[1], "/full_sig_distance_all_things.txt", sep = ""), sep = "\t", row.names = FALSE)

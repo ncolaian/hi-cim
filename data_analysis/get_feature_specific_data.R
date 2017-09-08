@@ -86,9 +86,9 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   colnames(background_counts) <- c("distance", "reads")
   
   #Use ddply to merge all the read counts for a particular distance into a mean. Also report the std
-  dist_vs_counts_tads <- ddply(dist_vs_counts_tads, "distance", summarize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
-  flares_and_loops_dvc <- ddply(flares_and_loops_dvc, "distance", summarize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
-  background_counts <- ddply(background_counts, "distance", summarize, means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
+  dist_vs_counts_tads <- ddply(dist_vs_counts_tads, "distance", summarize, total = sum(reads, na.rm), means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
+  flares_and_loops_dvc <- ddply(flares_and_loops_dvc, "distance", summarize, total = sum(reads, na.rm), means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
+  background_counts <- ddply(background_counts, "distance", summarize, total = sum(reads, na.rm), means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)))
   return(list(flares_and_loops_dvc, background_counts, dist_vs_counts_tads))
 }
 

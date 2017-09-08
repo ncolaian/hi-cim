@@ -50,6 +50,9 @@ my $logger = get_logger();
 
 ## MAIN ##
 
+my $count_files_href = get_count_file_names_for_each_chrom(\@chrom, $base_name);
+create_matrice_files($count_files_href, $out);
+merge_matrice_and_create_dist_vs_sig_graph(\@chrom,$out);
 
 ## Subroutines ##
 sub get_count_file_names_for_each_chrom {
@@ -89,7 +92,21 @@ sub create_matrice_files {
 }
 
 sub merge_matrice_and_create_dist_vs_sig_graph {
-	my ( )
+	my ( $chrom_aref, $o ) = @_;
+	$logger->info("Combining all the signal to distance matrices and creating a signal graph");
+	
+	my $cmd = "bsub -M 20 -J final -o $o/final.out Rscript $rbin/graph_tot_dist_sig.R $o"; #Command that will be ran
+	my @array = ("background_", "TADs_", "loop_flare");
+	foreach my $chr ( @$chrom_aref ) {
+		foreach my $name ( @array ) {
+			my $full_name = "$out/" . $name . $chr . ".txt";
+			$cmd .= " $full_name";
+		}
+	}
+	
+	#cmd should be complete so submit the command here
+	system($cmd);
+	return;
 }
 
 sub submit_and_stall {
