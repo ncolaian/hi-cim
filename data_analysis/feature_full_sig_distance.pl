@@ -61,7 +61,6 @@ sub get_count_file_names_for_each_chrom {
 	my @dir_full = split( /\//, $bn);
 	my $just_name = pop(@dir_full);
 	my $dir = join("/", @dir_full);
-	print $dir;
 	
 	my @full_dir_files;
 	opendir(my $DIR, $dir) || die("$dir could not be found\n");
@@ -92,7 +91,7 @@ sub create_matrice_files {
 		my $cmd = "Rscript $rbin/get_feature_specific_data.R --loop_file $loop_file --count_file $file --chromosome $key --out_dir $o";
 		push @jobs, $cmd;
 	}
-	submit_and_stall(\@jobs, "matrice", $o, "20", "12:00:00");
+	submit_and_stall(\@jobs, "matrice", $o, "20");
 	
 	return;
 }
@@ -116,9 +115,9 @@ sub merge_matrice_and_create_dist_vs_sig_graph {
 }
 
 sub submit_and_stall {
-	my ( $job_aref, $job_name, $out_directory, $mem, $time) = @_;
+	my ( $job_aref, $job_name, $out_directory, $mem) = @_;
 	$logger->info("Submitting and Stalling until all $job_name jobs finish\n");
-	
+	print Dumper($job_aref)
 	foreach my $cmd (@$job_aref) {
 		my $bsub_cmd = "bsub -M $mem -J $job_name -o $out_directory/$job_name.out -t $time $cmd";
 		system($bsub_cmd);
