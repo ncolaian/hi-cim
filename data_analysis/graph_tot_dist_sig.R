@@ -79,11 +79,6 @@ for ( i in seq(5,length(args), by = 3) ) {
   landf <- read_in_and_add(args[i+2], landf)
 }
 
-#create pooled stats
-full_background <- pooled_stats(full_background)
-tad <- pooled_stats(tad)
-landf <- pooled_stats(landf)
-
 #Combine
 tad$model <- "TADs"
 full_background$model <- "Background"
