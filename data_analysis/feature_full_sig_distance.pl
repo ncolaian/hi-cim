@@ -65,15 +65,15 @@ sub get_count_file_names_for_each_chrom {
 	#fill a hash with file names
 	my %file;
 	foreach my $chr ( @$chrom_aref ) {
-		opendir (my $DIR, $dir);
+		opendir (DIR, $dir);
 		
-		while ( readdir $DIR ) {
+		while ( readdir(DIR) ) {
 			next if ( $_ =~ /^\./ );
 			if ( $_ =~ qr/$just_name/ && $_ =~ qr/$bin_length\Kb/ && $_ =~ qr/chr$chr/ ) {
 				$file{$chr} = "$dir/$_";
 			}
 		}
-		closedir($DIR);
+		closedir(DIR);
 	}
 	#return hash with count file names
 	return \%file;
