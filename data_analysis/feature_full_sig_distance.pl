@@ -63,7 +63,7 @@ sub get_count_file_names_for_each_chrom {
 	my $dir = join("", @dir_full);
 	
 	my @full_dir_files;
-	opendir($DIR, $dit);
+	opendir(my $DIR, $dir);
 	while (readdir($DIR)) {
 		push @full_dir_files, $_;
 	}
