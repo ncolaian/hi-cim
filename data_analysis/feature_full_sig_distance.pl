@@ -73,10 +73,10 @@ sub get_count_file_names_for_each_chrom {
 	#fill a hash with file names
 	my %file;
 	foreach my $chromo ( @$chrom_aref ) {
-		while ( @full_dir_files ) {
-			next if ( $_ =~ /^\./ );
+		foreach my $fname ( @full_dir_files ) {
+			next if ( $file =~ /^\./ );
 			if ( $chromo =~ qr/$bin_length\Kb/ && $chromo =~ qr/chr$chromo/ ) {
-				$file{$chromo} = "$dir/$_";
+				$file{$chromo} = "$dir/$fname";
 			}
 		}
 	}
