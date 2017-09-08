@@ -9,7 +9,7 @@ use Getopt::Long;
 use Pod::Usage;
 use Carp;
 use Path::Class;
-use Log::Log4perl qw(easy);
+use Log::Log4perl qw(:easy);
 use Log::Log4perl::CommandLine qw(:all);
 use Data::Dumper;
 
