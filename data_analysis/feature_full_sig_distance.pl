@@ -79,6 +79,7 @@ sub get_count_file_names_for_each_chrom {
 			}
 		}
 	}
+	print Dumper(%file);
 	#return hash with count file names
 	return \%file;
 }
