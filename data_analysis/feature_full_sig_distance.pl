@@ -119,7 +119,7 @@ sub submit_and_stall {
 	$logger->info("Submitting and Stalling until all $job_name jobs finish\n");
 	print Dumper($job_aref)
 	foreach my $cmd (@$job_aref) {
-		my $bsub_cmd = "bsub -M $mem -J $job_name -o $out_directory/$job_name.out -t $time $cmd";
+		my $bsub_cmd = "bsub -M $mem -J $job_name -o $out_directory/$job_name.out $cmd";
 		system($bsub_cmd);
 	}
 	
