@@ -65,7 +65,7 @@ sub get_count_file_names_for_each_chrom {
 	my @full_dir_files;
 	opendir(my $DIR, $dir) || die("$dir could not be found\n");
 	while (readdir($DIR)) {
-		next if ( $_ =~ /^\./ && qr/$just_name/ );
+		next if ( $_ =~ /^\./ );
 		push @full_dir_files, $_;
 	}
 	closedir($DIR);
