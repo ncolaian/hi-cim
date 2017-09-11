@@ -108,7 +108,7 @@ sub merge_matrice_and_create_dist_vs_sig_graph {
 	my @array = ("background_", "TADs_", "loop_flare");
 	foreach my $chromo ( @$chrom_aref ) {
 		foreach my $name ( @array ) {
-			my $full_name = "$out/" . $name . $chromo . ".txt";
+			my $full_name = "$out/" . $name . "_$chromo" . ".txt";
 			$cmd .= " $full_name";
 		}
 	}
