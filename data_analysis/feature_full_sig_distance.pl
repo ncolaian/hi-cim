@@ -69,7 +69,7 @@ sub get_count_file_names_for_each_chrom {
 		push @full_dir_files, $_;
 	}
 	closedir($DIR);
-	print(Dumper(@full_dir_files))
+	print Dumper(@full_dir_files);
 	#fill a hash with file names
 	my %file;
 	foreach my $chromo ( @$chrom_aref ) {
