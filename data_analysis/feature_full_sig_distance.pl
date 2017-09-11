@@ -51,9 +51,8 @@ my $logger = get_logger();
 ## MAIN ##
 
 my $count_files_href = get_count_file_names_for_each_chrom(\@chrom, $base_name);
-print Dumper($count_files_href);
-#create_matrice_files($count_files_href, $out);
-#merge_matrice_and_create_dist_vs_sig_graph(\@chrom,$out);
+create_matrice_files($count_files_href, $out);
+merge_matrice_and_create_dist_vs_sig_graph(\@chrom,$out);
 
 ## Subroutines ##
 sub get_count_file_names_for_each_chrom {
@@ -82,7 +81,7 @@ sub get_count_file_names_for_each_chrom {
 			}
 		}
 	}
-	print Dumper(%file);
+	#print Dumper(%file);
 	
 	#return hash with count file names
 	return \%file;
