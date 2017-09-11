@@ -76,7 +76,8 @@ sub get_count_file_names_for_each_chrom {
 		foreach my $fname ( @full_dir_files ) {
 			next if ( $fname =~ /^\./ );
 			#print "$fname\t$bin_length\t$chromo\t$just_name\n";
-			if ( $fname =~ qr/$just_name/ && $fname =~ qr/chr$chromo/ && $fname =~ qr/$bin_length\Kb/ ) { #$fname =~ qr/$bin_length\Kb/ && $fname =~ qr/chr$chromo/
+			my $bl = "$bin_length" . "Kb";
+			if ( $fname =~ qr/$just_name/ && $fname =~ qr/chr$chromo/ && $fname =~ qr/$bl/ ) { #$fname =~ qr/$bin_length\Kb/ && $fname =~ qr/chr$chromo/
 				$file{$chromo} = "$dir/$fname";
 			}
 		}
