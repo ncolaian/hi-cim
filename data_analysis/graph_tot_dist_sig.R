@@ -28,7 +28,7 @@ landf <- read.delim(args[4], sep = "\t", header = TRUE)
 
 #### Function to read in files ####
 pooled_stats <- function(data_df) {
-  new_df <- matrix(ncol=4)
+  new_df <- matrix(ncol=5)
   new_df <- as.data.frame(new_df)
   colnames(new_df) <- c("distance", "total", "means","sd", "N")
   
