@@ -65,7 +65,6 @@ read_in_and_add <- function(file, df) {
   df <- rbind(df, add_df)
   df <- pooled_stats(df)
   df[is.nan(df$sd)] <- 0
-  print(df)
   return(df)
 }
 
@@ -88,7 +87,7 @@ landf$model <- "Loop&FL"
 #Diff Mean
 tad$tot_mean <- tad$total/tad$N
 full_background$tot_mean <- full_background$total/full_background$N
-landf$tot_mean <- landf$total/landf$total
+landf$tot_mean <- landf$total/landf$N
 
 combined_data_frame <- rbind(tad,full_background,landf)
 
