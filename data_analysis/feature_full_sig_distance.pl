@@ -26,7 +26,7 @@ my $rbin;
 my @chrom;
 $chrom[23] = "Y";
 $chrom[22] = "X";
-for ( my $i = 0; $i < scalar(@chrom); $i++ ) {
+for ( my $i = 0; $i < scalar(@chrom)-3; $i++ ) {
 	$chrom[$i] = $i + 1;
 }
 

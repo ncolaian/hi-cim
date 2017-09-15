@@ -2,6 +2,8 @@
 
 library(plyr)
 library(ggplot2)
+library(vcd)
+library(MASS)
 
 ### Read in data ###
 
@@ -28,8 +30,6 @@ dist_vs_avg_counts <- ddply(dist_vs_avg_counts, "distance", summarize, mean = me
 loop_matrix$achr <- as.character(loop_matrix$achr)
 loop_matrix$bchr <- as.character(loop_matrix$bchr)
 
-
-
 #### GLOBAL DISTANCE VS Signal CODE ###
 no_test_dist_vs_counts_tads <- matrix(ncol = 2)
 no_test_dist_vs_counts_tads <-as.data.frame(no_test_dist_vs_counts_tads)
@@ -39,7 +39,6 @@ flares_and_loops_dvc <- matrix(ncol=2)
 flares_and_loops_dvc <- as.data.frame(flares_and_loops_dvc)
 colnames(flares_and_loops_dvc) <- c("distance", "reads")
 
-data_used_vec <- c()
 
 for ( i in 1:length(loop_matrix$achr[loop_matrix$achr == "chr20"])) {
   #get individual loops
@@ -68,14 +67,41 @@ for ( i in 1:length(loop_matrix$achr[loop_matrix$achr == "chr20"])) {
     data_used_vec <- c(data_used_vec, (paste(as.character(flare_and_loop[j,]$start), ",", as.character(flare_and_loop[j,]$end))))
   }
 }
-data_used_vec <- unique(data_used_vec)
-graph_pot_tads <- ddply(no_test_dist_vs_counts_tads, "distance", summarize, means = mean(reads), sd = sd(reads))
-graph_pot_flares_and_loops <- ddply(flares_and_loops_dvc,"distance", summarize, means = mean(reads), sd = sd(reads))
-
 trial_counts <- read_counts[!(paste(as.character(read_counts$start), ",", as.character(read_counts$end)) %in% data_used_vec),]
 no_tad_or_loops <- data.frame(abs(trial_counts$end-trial_counts$start),trial_counts$reads)
 colnames(no_tad_or_loops) <- c("distance", "reads")
 no_tad_or_loops <- ddply(no_tad_or_loops, "distance", summarize, means = mean(reads), sd = sd(reads))
+
+hist(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)],ylim=c(0,500), breaks=300)
+hist(test, breaks=100, xlim=c(600,1000))
+
+(dist<-fitdistr(as.integer(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)]),densfun = "poisson"))
+BIC(dist)
+#Poisson fit test
+lamb <- trunc(mean(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)]))
+no_tad_or_loops$reads[no_tad_or_loops$distance == (1)]
+tab1<- table(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)])
+test <- rpois(5000, 852)
+t <- hist(test)
+
+real <- hist(trunc_1, breaks = 50)
+xhist <- c(min(real$breaks), real$breaks)
+yhist <- c(min(t$breaks), real$breaks)
+xfit<- seq(min(trunc_1), max(trunc_1), length = 40)
+yfit<- dpois(xfit,lambda = lamb)
+plot(xhist,yhist, type = "s")
+
+freq_exp <- (dpois(0:max(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)]), lambda=lamb))
+freq_exp
+gf <- goodfit(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)], type = "poisson", method = "MinChisq")
+summary(gf)
+
+qqplot(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)])
+hist(no_test_dist_vs_counts_tads$reads[no_test_dist_vs_counts_tads$distance == 3])
+
+data_used_vec <- unique(data_used_vec)
+graph_pot_tads <- ddply(no_test_dist_vs_counts_tads, "distance", summarize, means = mean(reads), sd = sd(reads))
+graph_pot_flares_and_loops <- ddply(flares_and_loops_dvc,"distance", summarize, means = mean(reads), sd = sd(reads))
 
 #plot the signal vs distance curve
 plot(dist_vs_avg_counts$distance[dist_vs_avg_counts$distance<50], dist_vs_avg_counts$mean[dist_vs_avg_counts$distance<50],

@@ -7,7 +7,8 @@ library(getopt)
 #Matrix makes it easier to look up values.
 params = matrix(c(
   "loop_file", "f", 1, "character",
-  "alt_loops", "f", 1, "character"
+  "alt_loops", "f", 1, "character",
+  "data_"
 ), byrow = TRUE, ncol = 4)
 opt = getopt(params)
 
