@@ -17,11 +17,11 @@ params = matrix(c(
 opt = getopt(params)
 
 #test
-#opt <- c("l", "a", 1)
-#names(opt) <- c("loop_file","count_file", "chromosome")
-#opt$loop_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
-#opt$count_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.chr20.10Kb.MQ30.KR_norm.mat"
-#opt$chromosome <- 20
+opt <- c("l", "a", 1)
+names(opt) <- c("loop_file","count_file", "chromosome")
+opt$loop_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
+opt$count_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.chr20.10Kb.MQ30.KR_norm.mat"
+opt$chromosome <- 20
 ### Read in data ###
 
 #loop data
@@ -61,7 +61,7 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
     end <- (lp_info$bbin_start/10000)
     adjust <- 2
     #This gets a big tad containinf tad and flares
-    flare_and_loop <- rc_df[rc_df$start >= (start-adjust) && rc_df$end <= (end+adjust),]
+    flare_and_loop <- rc_df[rc_df$start >= (start-adjust) & rc_df$end <= (end+adjust),]
     for (j in 1:length(flare_and_loop) ) {
       if ( (is.na(flare_and_loop[j,]$start))) next;
       #get TADS  ***Edited this recently***
@@ -100,6 +100,7 @@ print_out_data <- function(name, dataframe, chr, out) {
 
 #### MAIN ####
 graphs <- separate_loops_and_tads(opt$chromosome, loop_df, read_counts)
+
 print_out_data("loop_flare_", graphs[[1]], opt$chromosome, opt$out_dir)
 print_out_data("background_", graphs[[2]], opt$chromosome, opt$out_dir)
 print_out_data("TADs_", graphs[[3]], opt$chromosome, opt$out_dir)

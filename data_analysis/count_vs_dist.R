@@ -48,10 +48,11 @@ for ( i in 1:length(loop_matrix$achr[loop_matrix$achr == "chr20"])) {
   start <- (lp_info$abin_start/10000)
   end <- (lp_info$bbin_start/10000)
   adjust <- 2
+  data_used_vec <- c()
   flare_and_loop <- read_counts[read_counts$start >= (start-adjust) & read_counts$end <= (end+adjust),]
   for (j in 1:length(flare_and_loop) ) {
     #get TADS
-    if ( flare_and_loop[j,]$start > (start+adjust) && flare_and_loop[j,] < (end-adjust) ) {
+    if ( flare_and_loop[j,]$start > (start+adjust) && flare_and_loop[j,]$end < (end-adjust) ) {
       mm_matrix <- data.frame((flare_and_loop[j,]$end - flare_and_loop[j,]$start), 
                               flare_and_loop[j,]$reads)
       colnames(mm_matrix) <- colnames(no_test_dist_vs_counts_tads)
@@ -72,14 +73,14 @@ no_tad_or_loops <- data.frame(abs(trial_counts$end-trial_counts$start),trial_cou
 colnames(no_tad_or_loops) <- c("distance", "reads")
 no_tad_or_loops <- ddply(no_tad_or_loops, "distance", summarize, means = mean(reads), sd = sd(reads))
 
-hist(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)],ylim=c(0,500), breaks=300)
-hist(test, breaks=100, xlim=c(600,1000))
-
+p <- hist(no_tad_or_loops$reads,ylim=range(0,500), breaks=300, plot=TRUE)
+p <- hist(no_test_dist_vs_counts_tads$reads, breaks=100, xlim=c(600,1000))
+plot(c(2,2,2,2), c(1,2,3,4))
 (dist<-fitdistr(as.integer(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)]),densfun = "poisson"))
 BIC(dist)
 #Poisson fit test
 lamb <- trunc(mean(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)]))
-no_tad_or_loops$reads[no_tad_or_loops$distance == (1)]
+hist(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)])
 tab1<- table(no_tad_or_loops$reads[no_tad_or_loops$distance == (1)])
 test <- rpois(5000, 852)
 t <- hist(test)
