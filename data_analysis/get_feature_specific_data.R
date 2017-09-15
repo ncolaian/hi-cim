@@ -60,11 +60,12 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
     start <- (lp_info$abin_start/10000)
     end <- (lp_info$bbin_start/10000)
     adjust <- 2
-    flare_and_loop <- rc_df[rc_df$start >= (start-adjust) & rc_df$end <= (end+adjust),]
+    #This gets a big tad containinf tad and flares
+    flare_and_loop <- rc_df[rc_df$start >= (start-adjust) && rc_df$end <= (end+adjust),]
     for (j in 1:length(flare_and_loop) ) {
       if ( (is.na(flare_and_loop[j,]$start))) next;
-      #get TADS
-      if ( (flare_and_loop[j,]$start > (start+adjust)) && (flare_and_loop[j,] < (end-adjust)) ) {
+      #get TADS  ***Edited this recently***
+      if ( (flare_and_loop[j,]$start > (start+adjust)) && (flare_and_loop[j,]$end < (end-adjust)) ) {
         mm_matrix <- data.frame((flare_and_loop[j,]$end - flare_and_loop[j,]$start), 
                                 flare_and_loop[j,]$reads)
         colnames(mm_matrix) <- colnames(dist_vs_counts_tads)
