@@ -91,6 +91,7 @@ sub create_matrice_files {
 	my ( $count_href, $o ) = @_;
 	my @jobs;
 	foreach my $key ( keys %$count_href ) {
+	  next if ( $key !~ /^[0-9]*/ );
 		my $file = $count_href->{$key};
 		my $cmd = "Rscript $rbin/get_feature_specific_data.R --loop_file $loop_file --count_file $file --chromosome $key --out_dir $o";
 		push @jobs, $cmd;
