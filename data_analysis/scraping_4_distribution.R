@@ -66,16 +66,18 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   
   #only keep the the reads that are in spots of 5
   kval <- seq(1,60,by = 5)
-  dist_vs_counts_tads <- matrix(dist_vs_counts_tads$distance[dist_vs_counts_tads$distance %in% kval], dist_vs_counts_tads$reads[dist_vs_counts_tads$distance %in% kval], ncol = 2)
-  flares_and_loops_dvc <- matrix(flares_and_loops_dvc$distance[flares_and_loops_dvc$distance %in% kval], flares_and_loops_dvc$reads[flares_and_loops_dvc$distance %in% kval], ncol = 2)
-  background_counts <- matrix(background_counts$distance[background_counts$distance %in% kval], background_counts$reads[background_counts$distance %in% kval], ncol = 2)
-  
+  dist_vs_counts_tads$used <- sapply(dist_vs_counts_tads, "distance", function(x) {x %in% kval})
+  flares_and_loops_dvc$used <- sapply(flares_and_loops_dvc, "distance", function(x) {x %in% kval})
+  background_counts$used <- sapply(background_counts, "distance", function(x) {x %in% kval})
+    
   #add model and bring df to one thing
   dist_vs_counts_tads$model <- "TADs"
   flares_and_loops_dvc$model <- "Loop&FL"
   background_counts$model <- "Background"
   
-  combined <- rbind(dist_vs_counts_tads,flares_and_loops_dvc,background_counts)
+  combined <- rbind(dist_vs_counts_tads[dist_vs_counts_tads$used == TRUE,],
+                    flares_and_loops_dvc[flares_and_loops$used == TRUE,],
+                    background_counts[background_counts$used == TRUE,])
   
   return(combined)
 }
@@ -128,36 +130,41 @@ fit_distributions <- function(comb_df) {
     gam_b <- fitdistr(na.omit(as.integer(t$reads)), "gamma")
     
     #Create data from the predicted distributions
-    
     nb_t_df <- rnegbin(length(t$reads), mu = nbin_t$estimate[2], theta = nbin_t$estimate[1])
-    test3 <- rgamma(length(t$reads), gam_t$estimate[1], rate = gam_t$estimate[2])
+    gam_t_df <- rgamma(length(t$reads), gam_t$estimate[1], rate = gam_t$estimate[2])
     
+    nb_lf_df <- rnegbin(length(lf$reads), mu = nbin_lf$estimate[2], theta = nbin_lf$estimate[1])
+    gam_lf_df <- rgamma(length(lf$reads), gam_lf$estimate[1], rate = gam_lf$estimate[2])
     
-    t_new_ys <- predict(t_spline, seq(1,200))
-    t_df <- rbind(t_df, as.data.frame(t_new_ys,col.names = c("distance","means")))
+    nb_b_df <- rnegbin(length(b$reads), mu = nbin_b$estimate[2], theta = nbin_b$estimate[1])
+    gam_b_df <- rgamma(length(b$reads), gam_b$estimate[1], rate = gam_b$estimate[2])
     
-    lf_new_ys <- predict(lf_spline, seq(1,200))
-    lf_df <- rbind(lf_df, as.data.frame(lf_new_ys,col.names = c("distance","means")))
+    t_xlim <- range(0,max(t$distance)+300)
+    t_ylim <- range(0, sum(t$reads)/10)
     
-    b_new_ys <- predict(b_spline, seq(1,200))
-    b_df <- rbind(b_df, as.data.frame(b_new_ys,col.names = c("distance","means")))
+    lf_xlim <- range(0,max(t$distance)+300)
+    lf_ylim <- range(0, sum(t$reads)/10)
     
-    comb2 <- rbind(cbind(t_df, model = "TADs"),cbind(lf_df, model = "Loop&FL"),cbind(b_df, model = "Background" ))
+    b_xlim <- range(0,max(t$distance)+300)
+    b_ylim <- range(0, sum(t$reads)/10)
     
-    par(mfrow=c(3,3))
+    par(mfcol=c(3,3))
     
-    g1 <- ggplot( comb_df, aes( x = distance, y = means, col=model))+
-      geom_line()+
-      ggtitle("Distance Vs Mean - Real")+
-      theme(plot.title = element_text(hjust = .5))
+    t1 <- hist(t$reads, breaks = 200, xlim = t_xlim, ylim = t_ylim, main = paste("Original Read Distribution Dist =", i) )
+    t2 <- hist(nb_t_df, breaks = 200, xlim = t_xlim, ylim = t_ylim, main = paste("Simulated Neg.Binomial Distribution =", i))
+    t3 <- hist(gam_t_df, breaks = 200, xlim = t_xlim, ylim = t_ylim, main = paste("Simulated Gamma Distribution =", i))
     
-    g2 <- ggplot( comb2, aes( x = distance, y = means, col=model))+
-      geom_line()+
-      ggtitle(paste("Smooth Spline Spar =", i, "Distance Vs Mean"))+
-      theme(plot.title = element_text(hjust = .5))
+    lf1 <- hist(lf$reads, breaks = 200, xlim = lf_xlim, ylim = lf_ylim, main = paste("Original Read Distribution =", i))
+    lf2 <- hist(nb_lf_df, breaks = 200, xlim = lf_xlim, ylim = lf_ylim, main = paste("Simulated Neg.Binomial Distribution =", i))
+    lf3 <- hist(gam_lf_df, breaks = 200, xlim = lf_xlim, ylim = lf_ylim, main = paste("Simulated Gamma Distribution =", i))
     
-    print(g1)
-    print(g2)
+    b1 <- hist(b$reads, breaks = 200, xlim = b_xlim, ylim = b_ylim, main = paste("Original Read Distribution =", i))
+    b2 <- hist(nb_b_df, breaks = 200, xlim = b_xlim, ylim = b_ylim, main = paste("Simulated Neg.Binomial Distribution =", i))
+    b3 <- hist(gam_b_df, breaks = 200, xlim = b_xlim, ylim = b_ylim, main = paste("Simulated Gamma Distribution =", i))
+    
+    print(t1,t2,t3)
+    print(lf1,lf2,lf3)
+    print(b1,b2,b3)
   }
   dev.off()
 }
