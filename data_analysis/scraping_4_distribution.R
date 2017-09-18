@@ -4,6 +4,7 @@ args = commandArgs(trailingOnly=TRUE) # What you need to pass in arguements
 
 library(getopt)
 library(plyr)
+library(MASS)
 
 params = matrix(c(
   "loop_file", "l", 1, "character",
@@ -84,6 +85,20 @@ print_out_data <- function(name, dataframe, chr, out) {
 }
 
 ### MAIN ###
+#loop data
+loop <- read.delim(opt$loop_file, header = FALSE)
+loop_df <- as.data.frame(loop)
+colnames(loop_df) <- c("achr", "abin_start", "abin_end", "bchr", "bbin_start", "bbin_end",
+                       "bin_length", "loop_pval")
+#assign new bin length values to make it a number and not a character
+loop_df$distance <- abs(loop_df$abin_start - loop_df$bbin_start)
+
+#norm count data
+read_counts <- read.delim(opt$count_file, header = FALSE)
+read_counts <- as.data.frame(read_counts)
+colnames(read_counts) <- c("start", "end", "reads")
+
+#perform stuff
 combined_df <- separate_loops_and_tads(opt$chromosome, loop_df, read_counts)
 print_out_data("distr", combined_df, opt$chromosome, opt$out_dir)
 
@@ -95,14 +110,28 @@ fit_distributions <- function(comb_df) {
   pdf(file="/Users/phanstiel4/Documents/sim_graphs/distrub_60x5.pdf", w=11, h=8)
   
   for( i in dist_vals) {
-    t <- data.frame(comb_df$distance[comb_df$model == "TADs" & comb_df$distance == i], comb_df$means[comb_df$model == "TADs" & comb_df$distance == i])
-    lf <- data.frame(comb_df$distance[comb_df$model == "Loop&FL" & comb_df$distance == i], comb_df$means[comb_df$model == "Loop&FL" & comb_df$distance == i])
-    b <- data.frame(comb_df$distance[comb_df$model == "Background" & comb_df$distance == i], comb_df$means[comb_df$model == "Background" & comb_df$distance == i])
+    t <- data.frame(comb_df$distance[comb_df$model == "TADs" & comb_df$distance == i], comb_df$reads[comb_df$model == "TADs" & comb_df$distance == i])
+    lf <- data.frame(comb_df$distance[comb_df$model == "Loop&FL" & comb_df$distance == i], comb_df$reads[comb_df$model == "Loop&FL" & comb_df$distance == i])
+    b <- data.frame(comb_df$distance[comb_df$model == "Background" & comb_df$distance == i], comb_df$reads[comb_df$model == "Background" & comb_df$distance == i])
+    colnames(t) <- c("distance", "reads")
+    colnames(lf) <- c("distance", "reads")
+    colnames(b) <- c("distance", "reads")
     
+    #fit the distributions
+    nbin_t <- fitdistr(na.omit(as.integer(t$reads)), "negative binomial")
+    gam_t <- fitdistr(na.omit(as.integer(t$reads)), "gamma")
     
-    colnames(t_df) <- c("distance", "means")
-    colnames(lf_df) <- c("distance", "means")
-    colnames(b_df) <- c("distance", "means")
+    nbin_lf <- fitdistr(na.omit(as.integer(t$reads)), "negative binomial")
+    gam_lf <- fitdistr(na.omit(as.integer(t$reads)), "gamma")
+    
+    nbin_b <- fitdistr(na.omit(as.integer(t$reads)), "negative binomial")
+    gam_b <- fitdistr(na.omit(as.integer(t$reads)), "gamma")
+    
+    #Create data from the predicted distributions
+    
+    nb_t_df <- rnegbin(length(t$reads), mu = nbin_t$estimate[2], theta = nbin_t$estimate[1])
+    test3 <- rgamma(length(t$reads), gam_t$estimate[1], rate = gam_t$estimate[2])
+    
     
     t_new_ys <- predict(t_spline, seq(1,200))
     t_df <- rbind(t_df, as.data.frame(t_new_ys,col.names = c("distance","means")))
@@ -115,7 +144,7 @@ fit_distributions <- function(comb_df) {
     
     comb2 <- rbind(cbind(t_df, model = "TADs"),cbind(lf_df, model = "Loop&FL"),cbind(b_df, model = "Background" ))
     
-    par(mfrow=c(3,1))
+    par(mfrow=c(3,3))
     
     g1 <- ggplot( comb_df, aes( x = distance, y = means, col=model))+
       geom_line()+
