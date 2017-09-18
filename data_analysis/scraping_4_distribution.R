@@ -76,7 +76,7 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   background_counts$model <- "Background"
   
   combined <- rbind(dist_vs_counts_tads[dist_vs_counts_tads$used == TRUE,],
-                    flares_and_loops_dvc[flares_and_loops$used == TRUE,],
+                    flares_and_loops_dvc[flares_and_loops_dvc$used == TRUE,],
                     background_counts[background_counts$used == TRUE,])
   
   return(combined)
