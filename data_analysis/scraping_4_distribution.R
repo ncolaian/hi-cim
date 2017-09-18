@@ -69,7 +69,14 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   flares_and_loops_dvc <- matrix(flares_and_loops_dvc$distance[flares_and_loops_dvc$distance %in% kval], flares_and_loops_dvc$reads[flares_and_loops_dvc$distance %in% kval], ncol = 2)
   background_counts <- matrix(background_counts$distance[background_counts$distance %in% kval], background_counts$reads[background_counts$distance %in% kval], ncol = 2)
   
-  return(list(flares_and_loops_dvc, background_counts, dist_vs_counts_tads))
+  #add model and bring df to one thing
+  dist_vs_counts_tads$model <- "TADs"
+  flares_and_loops_dvc$model <- "Loop&FL"
+  background_counts$model <- "Background"
+  
+  combined <- rbind(dist_vs_counts_tads,flares_and_loops_dvc,background_counts)
+  
+  return(combined)
 }
 
 print_out_data <- function(name, dataframe, chr, out) {
@@ -77,8 +84,51 @@ print_out_data <- function(name, dataframe, chr, out) {
 }
 
 ### MAIN ###
-data_frame_list <- separate_loops_and_tads(opt$chromosome, loop_df, read_counts)
+combined_df <- separate_loops_and_tads(opt$chromosome, loop_df, read_counts)
+print_out_data("distr", combined_df, opt$chromosome, opt$out_dir)
 
-print_out_data("loop_flare_", data_frame_list[[1]], opt$chromosome, opt$out_dir)
-print_out_data("background_", data_frame_list[[2]], opt$chromosome, opt$out_dir)
-print_out_data("TADs_", data_frame_list[[3]], opt$chromosome, opt$out_dir)
+
+### This Code is for manual analysis of distributions ###
+#***** NEED TO MAKE SURE YOU COMBINE ALL CHROMOSOME DATA ******
+fit_distributions <- function(comb_df) {
+  dist_vals <- seq(1,60, by=5)
+  pdf(file="/Users/phanstiel4/Documents/sim_graphs/distrub_60x5.pdf", w=11, h=8)
+  
+  for( i in dist_vals) {
+    t <- data.frame(comb_df$distance[comb_df$model == "TADs" & comb_df$distance == i], comb_df$means[comb_df$model == "TADs" & comb_df$distance == i])
+    lf <- data.frame(comb_df$distance[comb_df$model == "Loop&FL" & comb_df$distance == i], comb_df$means[comb_df$model == "Loop&FL" & comb_df$distance == i])
+    b <- data.frame(comb_df$distance[comb_df$model == "Background" & comb_df$distance == i], comb_df$means[comb_df$model == "Background" & comb_df$distance == i])
+    
+    
+    colnames(t_df) <- c("distance", "means")
+    colnames(lf_df) <- c("distance", "means")
+    colnames(b_df) <- c("distance", "means")
+    
+    t_new_ys <- predict(t_spline, seq(1,200))
+    t_df <- rbind(t_df, as.data.frame(t_new_ys,col.names = c("distance","means")))
+    
+    lf_new_ys <- predict(lf_spline, seq(1,200))
+    lf_df <- rbind(lf_df, as.data.frame(lf_new_ys,col.names = c("distance","means")))
+    
+    b_new_ys <- predict(b_spline, seq(1,200))
+    b_df <- rbind(b_df, as.data.frame(b_new_ys,col.names = c("distance","means")))
+    
+    comb2 <- rbind(cbind(t_df, model = "TADs"),cbind(lf_df, model = "Loop&FL"),cbind(b_df, model = "Background" ))
+    
+    par(mfrow=c(3,1))
+    
+    g1 <- ggplot( comb_df, aes( x = distance, y = means, col=model))+
+      geom_line()+
+      ggtitle("Distance Vs Mean - Real")+
+      theme(plot.title = element_text(hjust = .5))
+    
+    g2 <- ggplot( comb2, aes( x = distance, y = means, col=model))+
+      geom_line()+
+      ggtitle(paste("Smooth Spline Spar =", i, "Distance Vs Mean"))+
+      theme(plot.title = element_text(hjust = .5))
+    
+    print(g1)
+    print(g2)
+  }
+  dev.off()
+}
