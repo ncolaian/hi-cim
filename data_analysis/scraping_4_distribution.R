@@ -176,6 +176,6 @@ fit_distributions <- function(comb_df) {
 }
 
 #main portion
-data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/full_distr.txt")
-fit_distributions(data4distr)
+#data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/full_distr.txt")
+#fit_distributions(data4distr)
 
