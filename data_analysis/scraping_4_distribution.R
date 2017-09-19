@@ -65,10 +65,10 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   colnames(background_counts) <- c("distance", "reads")
   
   #only keep the the reads that are in spots of 5
-  kval <- seq(1,60,by = 5)
-  dist_vs_counts_tads$used <- sapply(dist_vs_counts_tads$distance, function(x) {x %in% kval})
-  flares_and_loops_dvc$used <- sapply(flares_and_loops_dvc$distance, function(x) {x %in% kval})
-  background_counts$used <- sapply(background_counts$distance, function(x) {x %in% kval})
+  #kval <- seq(1,60,by = 5)
+  #dist_vs_counts_tads$used <- sapply(dist_vs_counts_tads$distance, function(x) {x %in% kval})
+  #flares_and_loops_dvc$used <- sapply(flares_and_loops_dvc$distance, function(x) {x %in% kval})
+  #background_counts$used <- sapply(background_counts$distance, function(x) {x %in% kval})
     
   #add model and bring df to one thing
   dist_vs_counts_tads$model <- "TADs"
@@ -139,32 +139,43 @@ fit_distributions <- function(comb_df) {
     nb_b_df <- rnegbin(length(b$reads), mu = nbin_b$estimate[2], theta = nbin_b$estimate[1])
     gam_b_df <- rgamma(length(b$reads), gam_b$estimate[1], rate = gam_b$estimate[2])
     
-    t_xlim <- range(0,max(t$distance)+300)
-    t_ylim <- range(0, sum(t$reads)/10)
+    t_xlim <- range(0, max(t$reads)+300)
+    t_ylim <- range(0, .1)
     
-    lf_xlim <- range(0,max(t$distance)+300)
-    lf_ylim <- range(0, sum(t$reads)/10)
+    lf_xlim <- range(0, max(lf$reads)+300)
+    lf_ylim <- range(0, .1)
     
-    b_xlim <- range(0,max(t$distance)+300)
-    b_ylim <- range(0, sum(t$reads)/10)
+    b_xlim <- range(0, max(b$reads)+300)
+    b_ylim <- range(0, .1)
     
     par(mfcol=c(3,3))
     
-    t1 <- hist(t$reads, breaks = 200, xlim = t_xlim, ylim = t_ylim, main = paste("Original Read Distribution Dist =", i) )
-    t2 <- hist(nb_t_df, breaks = 200, xlim = t_xlim, ylim = t_ylim, main = paste("Simulated Neg.Binomial Distribution =", i))
-    t3 <- hist(gam_t_df, breaks = 200, xlim = t_xlim, ylim = t_ylim, main = paste("Simulated Gamma Distribution =", i))
+    t1 <- hist(t$reads, breaks = 200, xlim = t_xlim, main = paste("Tad Original Read Distribution Dist =", i), freq = FALSE )
+    t2 <- hist(nb_t_df, breaks = 200, xlim = t_xlim, main = paste("Simulated Neg.Binomial Distribution =", i), freq = FALSE)
+    t3 <- hist(gam_t_df, breaks = 200, xlim = t_xlim, main = paste("Simulated Gamma Distribution =", i), freq = FALSE)
     
-    lf1 <- hist(lf$reads, breaks = 200, xlim = lf_xlim, ylim = lf_ylim, main = paste("Original Read Distribution =", i))
-    lf2 <- hist(nb_lf_df, breaks = 200, xlim = lf_xlim, ylim = lf_ylim, main = paste("Simulated Neg.Binomial Distribution =", i))
-    lf3 <- hist(gam_lf_df, breaks = 200, xlim = lf_xlim, ylim = lf_ylim, main = paste("Simulated Gamma Distribution =", i))
+    lf1 <- hist(lf$reads, breaks = 200, xlim = lf_xlim, main = paste("Loop&FL Original Read Distribution =", i), freq = FALSE)
+    lf2 <- hist(nb_lf_df, breaks = 200, xlim = lf_xlim, main = paste("Simulated Neg.Binomial Distribution =", i), freq = FALSE)
+    lf3 <- hist(gam_lf_df, breaks = 200, xlim = lf_xlim, main = paste("Simulated Gamma Distribution =", i), freq = FALSE)
     
-    b1 <- hist(b$reads, breaks = 200, xlim = b_xlim, ylim = b_ylim, main = paste("Original Read Distribution =", i))
-    b2 <- hist(nb_b_df, breaks = 200, xlim = b_xlim, ylim = b_ylim, main = paste("Simulated Neg.Binomial Distribution =", i))
-    b3 <- hist(gam_b_df, breaks = 200, xlim = b_xlim, ylim = b_ylim, main = paste("Simulated Gamma Distribution =", i))
+    b1 <- hist(b$reads, breaks = 200, xlim = b_xlim, main = paste("BG Original Read Distribution =", i), freq = FALSE)
+    b2 <- hist(nb_b_df, breaks = 200, xlim = b_xlim, main = paste("Simulated Neg.Binomial Distribution =", i), freq = FALSE)
+    b3 <- hist(gam_b_df, breaks = 200, xlim = b_xlim, main = paste("Simulated Gamma Distribution =", i), freq = FALSE)
     
-    print(t1,t2,t3)
-    print(lf1,lf2,lf3)
-    print(b1,b2,b3)
+    print(t1)
+    print(t2)
+    print(t3)
+    print(lf1)
+    print(lf2)
+    print(lf3)
+    print(b1)
+    print(b2)
+    print(b3)
   }
   dev.off()
 }
+
+#main portion
+data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/full_distr.txt")
+fit_distributions(data4distr)
+
