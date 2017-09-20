@@ -18,14 +18,14 @@ fit_distributions <- function(comb_df) {
     colnames(b) <- c("reads")
     
     #fit the distributions
-    nbin_t <- fitdistr(as.integer(t), "negative binomial")
+    nbin_t <- fitdistr(na.omit(as.integer(t)), "negative binomial")
     gam_t <- fitdistr(as.integer(t), "gamma")
     
-    nbin_lf <- fitdistr(as.integer(lf), "negative binomial")
-    gam_lf <- fitdistr(as.integer(lf), "gamma")
+    nbin_lf <- fitdistr(na.omit(as.integer(lf)), "negative binomial")
+    gam_lf <- fitdistr(na.omit(as.integer(lf)), "gamma")
     
-    nbin_b <- fitdistr(as.integer(b), "negative binomial")
-    gam_b <- fitdistr(as.integer(b), "gamma")
+    nbin_b <- fitdistr(na.omit(as.integer(b)), "negative binomial")
+    gam_b <- fitdistr(na.omit(as.integer(b)), "gamma")
     
     #Create data frame from the distributions generated
     nb_t_df <- rnegbin(length(t$reads), mu = nbin_t$estimate[2], theta = nbin_t$estimate[1])
