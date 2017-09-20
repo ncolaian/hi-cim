@@ -13,9 +13,6 @@ fit_distributions <- function(comb_df) {
     t <- comb_df$reads[comb_df$model == "TADs" & comb_df$distance == i]
     lf <- comb_df$reads[comb_df$model == "Loop&FL" & comb_df$distance == i]
     b <- comb_df$reads[comb_df$model == "Background" & comb_df$distance == i]
-    colnames(t) <- c("reads")
-    colnames(lf) <- c("reads")
-    colnames(b) <- c("reads")
     
     #fit the distributions
     nbin_t <- fitdistr(na.omit(as.integer(t)), "negative binomial")
