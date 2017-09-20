@@ -1,5 +1,7 @@
 #! /usr/bin/env Rscript
 
+library(MASS)
+
 args = commandArgs(trailingOnly=TRUE) # What you need to pass in arguements
 
 #### Subroutines ####
