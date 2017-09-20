@@ -5,7 +5,7 @@ args = commandArgs(trailingOnly=TRUE) # What you need to pass in arguements
 #### Subroutines ####
 fit_distributions <- function(comb_df) {
   dist_vals <- seq(1,50)
-  dist_matrix <- vec()
+  dist_matrix <- c()
   
   for( i in dist_vals) {
     t <- data.frame(comb_df$distance[comb_df$model == "TADs" & comb_df$distance == i], comb_df$reads[comb_df$model == "TADs" & comb_df$distance == i])
