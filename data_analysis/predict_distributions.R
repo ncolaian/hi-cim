@@ -10,16 +10,16 @@ fit_distributions <- function(comb_df) {
   dist_matrix <- c()
   
   for( i in dist_vals) {
-    t <- data.frame(comb_df$reads[comb_df$model == "TADs" & comb_df$distance == i])
-    lf <- data.frame(comb_df$reads[comb_df$model == "Loop&FL" & comb_df$distance == i])
-    b <- data.frame(comb_df$reads[comb_df$model == "Background" & comb_df$distance == i])
+    t <- comb_df$reads[comb_df$model == "TADs" & comb_df$distance == i]
+    lf <- comb_df$reads[comb_df$model == "Loop&FL" & comb_df$distance == i]
+    b <- comb_df$reads[comb_df$model == "Background" & comb_df$distance == i]
     colnames(t) <- c("reads")
     colnames(lf) <- c("reads")
     colnames(b) <- c("reads")
     
     #fit the distributions
     nbin_t <- fitdistr(na.omit(as.integer(t)), "negative binomial")
-    gam_t <- fitdistr(as.integer(t), "gamma")
+    gam_t <- fitdistr(na.omit(as.integer(t)), "gamma")
     
     nbin_lf <- fitdistr(na.omit(as.integer(lf)), "negative binomial")
     gam_lf <- fitdistr(na.omit(as.integer(lf)), "gamma")
