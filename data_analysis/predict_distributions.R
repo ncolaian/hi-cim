@@ -61,7 +61,7 @@ print_out_data <- function(name, dataframe, o) {
 #the combined data points
 data4distr <- read.delim(args[1], quote = "")
 #testing
-data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/comb2_d.txt", stringsAsFactors = FALSE)
+#data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/comb2_d.txt", stringsAsFactors = FALSE)
 #get output file path
 outer <- args[2]
 colnames(data4distr) <- c("distance", "reads", "used", "model")
@@ -73,5 +73,5 @@ fit <- fit_distributions(data4distr)
 #print out table
 print_out_data("distr_50", fit, outer)
 #test
-outer <- "/Users/phanstiel4/Documents/sim_graphs/distribution"
-print_out_data("distr_50", fit, outer)
+#outer <- "/Users/phanstiel4/Documents/sim_graphs/distribution"
+#print_out_data("distr_50", fit, outer)
