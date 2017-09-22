@@ -12,14 +12,14 @@ params = matrix(c(
   "loop_file", "l", 1, "character",
   "distr_data", "d", 1, "character",
   "chrom","c", 1, "integer",
-  "start", "s", 1, "integer",
+  "start", "st", 1, "integer",
   "end", "e", 1, "integer",
-  "bin_length", "b", "integer"
+  "bin_length", "b",1, "integer"
 ), byrow = TRUE, ncol = 4)
 opt = getopt(params)
 
 #test
-#opt <- c("l", "a", 1, 1, 1, 1)
+opt <- c("l", "a", 1, 1, 1, 1)
 #names(opt) <- c("loop_file","distr_data", "chrom", "start", "end", "bin_length")
 #opt$loop_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
 #opt$distr_data <- "/Users/phanstiel4/Documents/sim_graphs/distribution/distr_50.txt"
