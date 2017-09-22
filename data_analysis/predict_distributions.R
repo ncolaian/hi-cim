@@ -15,18 +15,18 @@ fit_distributions <- function(comb_df) {
     t <- as.integer(comb_df$reads[comb_df$model == "TADs" & comb_df$distance == i])
     lf <- as.integer(comb_df$reads[comb_df$model == "Loop&FL" & comb_df$distance == i])
     b <- as.integer(comb_df$reads[comb_df$model == "Background" & comb_df$distance == i])
-
-    #fit the distributions
-    nbin_t <- fitdistr(as.integer(t), "negative binomial")
-    gam_t <- fitdistr(as.integer(t), "gamma")
+    # 
+    # #fit the distributions
+    # nbin_t <- fitdistr(as.integer(t), "negative binomial")
+    # gam_t <- fitdistr(as.integer(t), "gamma")
     
     nbin_lf <- fitdistr(as.integer(lf), "negative binomial")
     gam_lf <- fitdistr(as.integer(lf), "gamma")
     
-    b[is.na(b)] <- 0
-    b <- b+1
-    nbin_b <- fitdistr(as.integer(b), "negative binomial")
-    gam_b <- fitdistr(as.integer(b), "gamma")
+    # b[is.na(b)] <- 0
+    # b <- b+1
+    # nbin_b <- fitdistr(as.integer(b), "negative binomial")
+    # gam_b <- fitdistr(as.integer(b), "gamma")
     
     #Create data frame from the distributions generated
     
