@@ -3,7 +3,8 @@
 args = commandArgs(trailingOnly=TRUE) # What you need to pass in arguements
 
 library(getopt)
-library(Sushi)
+library(Sushi,lib.loc="/nas02/home/n/c/ncolaian/R/x86_64-pc-linux-gnu-library/3.2")
+#library(Sushi) for testing
 
 #Handles input and puts the options passed into the program into a matrix
 #Matrix makes it easier to look up values.
