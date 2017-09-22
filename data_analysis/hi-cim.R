@@ -19,7 +19,7 @@ params = matrix(c(
 opt = getopt(params)
 
 #test
-opt <- c("l", "a", 1, 1, 1, 1)
+#opt <- c("l", "a", 1, 1, 1, 1)
 #names(opt) <- c("loop_file","distr_data", "chrom", "start", "end", "bin_length")
 #opt$loop_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
 #opt$distr_data <- "/Users/phanstiel4/Documents/sim_graphs/distribution/distr_50.txt"
