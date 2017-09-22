@@ -95,7 +95,7 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
 }
 
 print_out_data <- function(name, dataframe, chr, out) {
-  write.table(dataframe, file = gsub(" ","",paste(out, "/", name, chr, ".txt",sep = ""),fixed = TRUE), sep = "\t", row.names = FALSE)
+  write.table(dataframe, file = gsub(" ","",paste(out, "/", name, chr, ".txt",sep = ""),fixed = TRUE), sep = "\t", row.names = FALSE, quote = FALSE)
 }
 
 #### MAIN ####
