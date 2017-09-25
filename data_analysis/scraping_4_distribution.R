@@ -71,7 +71,7 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   background_counts$used <- sapply(background_counts$distance, function(x) {x < 51})
   
   #Sample the background reads
-  sample_amount <- nrow(dist_vs_counts_tads)*3
+  sample_amount <- nrow(dist_vs_counts_tads) + (nrow(background_counts) - nrow(dist_vs_counts_tads))/3
   dist_vs_counts_tads <- dist_vs_counts_tads[sample(nrow(dist_vs_counts_tads),size=sample_amount,replace=FALSE),]
     
   #add model and bring df to one thing
