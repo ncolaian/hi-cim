@@ -11,9 +11,6 @@ fit_distributions <- function(tad_df, loop_df, back_df) {
   loop_df <- na.omit(loop_df)
   back_df <- na.omit(back_df)
   
-  print(class(tad_df$distance))
-  print(class(tad_df$reads))
-  
   dist_vals <- seq(1,30)
   dist_matrix <- c()
   
@@ -21,7 +18,7 @@ fit_distributions <- function(tad_df, loop_df, back_df) {
     t <- as.integer(tad_df$reads[tad_df$distance == i])
     lf <- as.integer(loop_df$reads[loop_df$distance == i])
     b <- as.integer(back_df$reads[back_df$distance == i])
-    
+    print(t)
      #fit the distributions
     nbin_t <- fitdistr(as.integer(t), "negative binomial")
     gam_t <- fitdistr(as.integer(t), "gamma")
