@@ -69,6 +69,7 @@ print_out_data <- function(name, dataframe, o) {
 data4tad <- read.delim(args[1])
 data4loop <- read.delim(args[2])
 data4back <- read.delim(args[3])
+print(data4tad[1:5,])
 #testing
 #data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/comb2_d.txt", stringsAsFactors = FALSE)
 #get output file path
