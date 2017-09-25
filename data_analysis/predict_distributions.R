@@ -11,6 +11,9 @@ fit_distributions <- function(tad_df, loop_df, back_df) {
   loop_df <- na.omit(loop_df)
   back_df <- na.omit(back_df)
   
+  print(class(tad_df$distance))
+  print(class(tad_df$reads))
+  
   dist_vals <- seq(1,30)
   dist_matrix <- c()
   
@@ -18,7 +21,7 @@ fit_distributions <- function(tad_df, loop_df, back_df) {
     t <- as.integer(tad_df$reads[tad_df$distance == i])
     lf <- as.integer(loop_df$reads[loop_df$distance == i])
     b <- as.integer(back_df$reads[back_df$distance == i])
-     
+    
      #fit the distributions
     nbin_t <- fitdistr(as.integer(t), "negative binomial")
     gam_t <- fitdistr(as.integer(t), "gamma")
@@ -66,10 +69,9 @@ print_out_data <- function(name, dataframe, o) {
 #### MAIN ####
 
 #the combined data points
-data4tad <- read.delim(args[1])
-data4loop <- read.delim(args[2])
-data4back <- read.delim(args[3])
-print(data4tad[1:5,])
+data4tad <- read.delim(args[1], quote = "")
+data4loop <- read.delim(args[2], quote = "")
+data4back <- read.delim(args[3], quote = "")
 #testing
 #data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/comb2_d.txt", stringsAsFactors = FALSE)
 #get output file path
