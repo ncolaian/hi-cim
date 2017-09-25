@@ -69,6 +69,10 @@ separate_loops_and_tads <- function(chr, loops, rc_df) {
   dist_vs_counts_tads$used <- sapply(dist_vs_counts_tads$distance, function(x) {x < 51})
   flares_and_loops_dvc$used <- sapply(flares_and_loops_dvc$distance, function(x) {x < 51})
   background_counts$used <- sapply(background_counts$distance, function(x) {x < 51})
+  
+  #Sample the background reads
+  sample_amount <- nrow(dist_vs_counts_tads)*3
+  dist_vs_counts_tads <- dist_vs_counts_tads[sample(nrow(dist_vs_counts_tads),size=sample_amount,replace=FALSE),]
     
   #add model and bring df to one thing
   dist_vs_counts_tads$model <- "TADs"
@@ -102,7 +106,9 @@ colnames(read_counts) <- c("start", "end", "reads")
 
 #perform stuff
 combined_df <- separate_loops_and_tads(opt$chromosome, loop_df, read_counts)
-print_out_data("distr", combined_df, opt$chromosome, opt$out_dir)
+print_out_data("distr_tad", combined_df[combined_df$model == "TADs"], opt$chromosome, opt$out_dir)
+print_out_data("distr_Loop&FL", combined_df[combined_df$model == "Loop&FL"], opt$chromosome, opt$out_dir)
+print_out_data("distr_back", combined_df[combined_df$model == "Background"], opt$chromosome, opt$out_dir)
 
 
 ### This Code is for manual analysis of distributions ###
