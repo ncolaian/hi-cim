@@ -11,7 +11,7 @@ fit_distributions <- function(tad_df, loop_df, back_df) {
   loop_df <- na.omit(loop_df)
   back_df <- na.omit(back_df)
   
-  dist_vals <- seq(1,75)
+  dist_vals <- seq(1,30)
   dist_matrix <- c()
   
   for( i in dist_vals) {
