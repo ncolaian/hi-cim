@@ -106,9 +106,9 @@ colnames(read_counts) <- c("start", "end", "reads")
 
 #perform stuff
 combined_df <- separate_loops_and_tads(opt$chromosome, loop_df, read_counts)
-print_out_data("distr_tad", combined_df[combined_df$model == "TADs"], opt$chromosome, opt$out_dir)
-print_out_data("distr_Loop&FL", combined_df[combined_df$model == "Loop&FL"], opt$chromosome, opt$out_dir)
-print_out_data("distr_back", combined_df[combined_df$model == "Background"], opt$chromosome, opt$out_dir)
+print_out_data("distr_tad", combined_df[combined_df$model == "TADs",], opt$chromosome, opt$out_dir)
+print_out_data("distr_Loop&FL", combined_df[combined_df$model == "Loop&FL",], opt$chromosome, opt$out_dir)
+print_out_data("distr_back", combined_df[combined_df$model == "Background",], opt$chromosome, opt$out_dir)
 
 
 ### This Code is for manual analysis of distributions ###
