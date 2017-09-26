@@ -4,7 +4,7 @@ args = commandArgs(trailingOnly=TRUE) # What you need to pass in arguements
 
 library(getopt)
 library(Sushi,lib.loc="/nas02/home/n/c/ncolaian/R/x86_64-pc-linux-gnu-library/3.2")
-#library(Sushi)# for testing
+library(Sushi)# for testing
 
 #Handles input and puts the options passed into the program into a matrix
 #Matrix makes it easier to look up values.
@@ -21,8 +21,8 @@ opt = getopt(params)
 #test
 opt <- c("l", "a", 1, 1, 1, 1)
 names(opt) <- c("loop_file","distr_data", "chrom", "start", "end", "bin_length")
-opt$loop_file <- "/Users/phanstiel4/Documents/code_rep/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
-opt$distr_data <- "/Users/phanstiel4/Documents/sim_graphs/distribution/distr_50.txt"
+opt$loop_file <- "/Users/ncolaian/Documents/phanstiel_lab/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
+opt$distr_data <- "/Users/ncolaian/Documents/phanstiel_lab/data/distr_50.txt"
 opt$chrom <- 20
 opt$start <- 1600000
 opt$end <- 4000000
@@ -34,7 +34,7 @@ opt$bin_length <- 10
 
 #create a blank matrix that will hold the simulated data
 create_sim_matrix <- function(starting, ending, bl) {
-  options(scipen = 999)
+  #options(scipen = 999)
   vec <- seq(starting, ending, by = bl)
   new_matrix <- matrix(0L, nrow = length(vec), ncol = length(vec))
   colnames(new_matrix) <- paste(vec,"lab", sep="_")
@@ -71,7 +71,7 @@ create_combined_tag <- function(x,spot) {
 
 get_flares <- function(starting, ending, bl) {
   vec<- c()
-  adjust <- bl*2
+  adjust <- bl
   flare_end <- ending+adjust
   flare_start <- starting - adjust
   bot <- seq(from = flare_start, to = abs(starting+adjust), by = bl)
@@ -80,13 +80,13 @@ get_flares <- function(starting, ending, bl) {
   #get left flare and top right combined
   for(spot in bot) {
     new <- sapply(seq(spot, flare_end, by = bl), function(x) {x <- paste(spot,":",x, sep=""); return(x)})
-    vec <- c(vec, new)
+    vec <- append(vec, new)
   }
   
   #get top flare
   for(spot in top) {
-    new <- sapply(seq(to = spot, from = (starting-adjust), by = bl), function(x) {x <- paste(spot,":",x, sep=""); return(x)})
-    vec <- c(vec, new)
+    new <- sapply(seq(to = spot, from = starting, by = bl), function(x) {x <- paste(x,":",spot, sep=""); return(x)})
+    vec <- append(vec, new)
   }
   
   return(vec)
@@ -98,22 +98,23 @@ get_tads <- function(starting, ending, bl) {
   new_s <- starting+adjust
   new_e <- ending-adjust
 
-  for(spot in seq(new_s, new_e, by=bl)) {
+  for(spot in seq(from = new_s, to = new_e, by=bl)) {
     new <- sapply(seq(spot, new_e, by = bl), function(x) {x <- paste(spot,":",x, sep=""); return(x)})
-    vec <- c(vec, new)
+    vec <- append(vec, new)
   }
   
   return(vec)
 }
 
 add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
+  options(scipen = 10, digits=10)
   num_loops <- sum((vec_list[[1]] == paste(x,":", y, sep = "")), na.rm = TRUE )
   num_flares <- sum((vec_list[[2]] == paste(x,":", y, sep = "")), na.rm = TRUE)
   num_tads <- sum((vec_list[[3]] == paste(x,":", y, sep = "")), na.rm = TRUE )
 
   dist <- abs((y-x)/bl)
-  if(dist>30){
-    dist <- 30
+  if(dist>40){
+    dist <- 40
   }
   if(dist==0){
     dist <- 1
@@ -122,40 +123,43 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
   value <- 0;
   if(num_loops > 0) {
     val_vec <- rgamma(num_loops, as.numeric(distr$scale[distr$distance == 1 & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == 1 & distr$model == "Loop&FL"]))
-    value <- value + sum(val_vec)
+    value <- value + sum(round(val_vec))*2
   }
   
   if(num_flares > 0) {
     val_vec <- rgamma(num_flares, as.numeric(distr$scale[distr$distance == dist & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Loop&FL"]))
-    value <- value + sum(val_vec)
+    value <- value + sum(round(val_vec))
   }
   
   if(num_tads > 0) {
     val_vec <- rgamma(num_tads, as.numeric(distr$scale[distr$distance == dist & distr$model == "TADs"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "TADs"]))
-    value <- value + sum(val_vec)
+    value <- value + sum(round(val_vec))
   }
   
   #this means it is a background pixel
-  if(value == 0) {
-    val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
-    value <- sum(val_vec)
-  }
+  # if(value == 0) {
+  #   val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
+  #   value <- sum(as.integer(val_vec))
+  # }
+  val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
+  value <- value + sum(as.integer(val_vec))
   if(is.na(value)){
     value <- 0
   }
-  print(value)
+  
   return(value)
 }
 
-create_hic_heatmap <- function(matrix, chr, starting, ending, bl, zr=c(0,100),
-                               legend=T, lab="Simulated Data") {
+create_hic_heatmap <- function(matrix, chr, starting, ending, bl, zr=c(0,30),
+                               legend=T, lab="Simulated Data" ) {
   chromo <- paste("chr", chr, sep="")
   vec <- seq(starting, ending, by = bl)
   colnames(matrix) <- vec
   rownames(matrix) <- vec
   
-  hcplot <- plotHic(matrix, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","dodgerblue2")))
+  hcplot <- plotHic2(matrix, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","dodgerblue2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "both", format = "full")
   labelgenome(chrom=chromo,starting, ending, scale="Mb")
+  labelgenome(chrom=chromo,starting, ending, scale="Mb", side = 2, las = 2)
   title(main="Simulated Hi-C Data")
   
   return(hcplot)

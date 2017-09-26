@@ -114,8 +114,10 @@ print_out_data("distr_back", combined_df[combined_df$model == "Background",], op
 ### This Code is for manual analysis of distributions ###
 #***** NEED TO MAKE SURE YOU COMBINE ALL CHROMOSOME DATA ******
 fit_distributions <- function(comb_df) {
-  dist_vals <- seq(1,60, by=5)
-  pdf(file="/Users/phanstiel4/Documents/sim_graphs/distrub_60x5.pdf", w=11, h=8)
+  dist_vals <- seq(1,50, by=2)
+  pdf(file="/Users/ncolaian/Documents/phanstiel_lab/data/pdf_out/distrub_60x5.pdf", w=11, h=8)
+  comb_df$reads <- as.integer(comb_df$reads)
+  comb_df$reads[comb_df$reads == 0] <- 1
   
   for( i in dist_vals) {
     t <- data.frame(comb_df$distance[comb_df$model == "TADs" & comb_df$distance == i], comb_df$reads[comb_df$model == "TADs" & comb_df$distance == i])
@@ -129,11 +131,11 @@ fit_distributions <- function(comb_df) {
     nbin_t <- fitdistr(na.omit(as.integer(t$reads)), "negative binomial")
     gam_t <- fitdistr(na.omit(as.integer(t$reads)), "gamma")
     
-    nbin_lf <- fitdistr(na.omit(as.integer(t$reads)), "negative binomial")
-    gam_lf <- fitdistr(na.omit(as.integer(t$reads)), "gamma")
+    nbin_lf <- fitdistr(na.omit(as.integer(lf$reads)), "negative binomial")
+    gam_lf <- fitdistr(na.omit(as.integer(lf$reads)), "gamma")
     
-    nbin_b <- fitdistr(na.omit(as.integer(t$reads)), "negative binomial")
-    gam_b <- fitdistr(na.omit(as.integer(t$reads)), "gamma")
+    nbin_b <- fitdistr(na.omit(as.integer(b$reads)), "negative binomial")
+    gam_b <- fitdistr(na.omit(as.integer(b$reads)), "gamma")
     
     #Create data from the predicted distributions
     nb_t_df <- rnegbin(length(t$reads), mu = nbin_t$estimate[2], theta = nbin_t$estimate[1])
@@ -182,6 +184,9 @@ fit_distributions <- function(comb_df) {
 }
 
 #main portion
+data4dist <- rbind(data4back, data4loop, data4tad) #test
+data4dist$model <- as.character(data4dist$model)
+data4dist$model <- gsub("\"","", data4dist$model)
 #data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/full_distr.txt")
-#fit_distributions(data4distr)
+fit_distributions(data4dist)
 

@@ -1,7 +1,7 @@
 #! /usr/bin/env Rscript
 
 library(MASS)
-library(lmom)
+library(ggplot2)
 
 args = commandArgs(trailingOnly=TRUE) # What you need to pass in arguements
 
@@ -11,20 +11,20 @@ fit_distributions <- function(tad_df, loop_df, back_df) {
   loop_df <- na.omit(loop_df)
   back_df <- na.omit(back_df)
   
-  dist_vals <- seq(1,30)
+  dist_vals <- 40
   dist_matrix <- c()
   
-  for( i in dist_vals) {
+  for( i in 0:dist_vals) {
     t <- as.integer(tad_df$reads[tad_df$distance == i])
     lf <- as.integer(loop_df$reads[loop_df$distance == i])
     b <- as.integer(back_df$reads[back_df$distance == i])
-    print(t)
+    
      #fit the distributions
     nbin_t <- fitdistr(as.integer(t), "negative binomial")
     gam_t <- fitdistr(as.integer(t), "gamma")
     
     nbin_lf <- fitdistr(as.integer(lf), "negative binomial")
-    gam_lf <- fitdistr(as.integer(t), "gamma")
+    gam_lf <- fitdistr(as.integer(lf), "gamma")
     
     b[is.na(b)] <- 0
     b <- b+1
@@ -70,16 +70,29 @@ data4tad <- read.delim(args[1], quote = "")
 data4loop <- read.delim(args[2], quote = "")
 data4back <- read.delim(args[3], quote = "")
 #testing
-#data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/comb2_d.txt", stringsAsFactors = FALSE)
+data4tad <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/ftr_tad.txt", quote = "")
+data4loop <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/ftr_lf.txt", quote = "")
+data4back <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/ftr_back.txt", quote = "")
+
 #get output file path
 outer <- args[4]
 colnames(data4tad) <- c("distance", "reads", "used", "model")
 colnames(data4loop) <- c("distance", "reads", "used", "model")
 colnames(data4back) <- c("distance", "reads", "used", "model")
 
+#Get the distance to the right spot
+data4tad$distance <- as.character(data4tad$distance)
+data4loop$distance <- as.character(data4loop$distance)
+data4back$distance <- as.character(data4back$distance)
+
+data4tad$distance <- gsub("^.*:", "", data4tad$distance)
+data4loop$distance <- gsub("^.*:", "", data4loop$distance)
+data4back$distance <- gsub("^.*:", "", data4back$distance)
+
 data4tad$distance <- as.integer(data4tad$distance)
 data4loop$distance <- as.integer(data4loop$distance)
 data4back$distance <- as.integer(data4back$distance)
+
 
 #make dataframe
 fit <- fit_distributions(data4tad, data4loop, data4back)
@@ -87,5 +100,9 @@ fit <- fit_distributions(data4tad, data4loop, data4back)
 #print out table
 print_out_data("distr_50", fit, outer)
 #test
-#outer <- "/Users/phanstiel4/Documents/sim_graphs/distribution"
-#print_out_data("distr_50", fit, outer)
+outer <- "/Users/ncolaian/Documents/phanstiel_lab/data/"
+print_out_data("distr_50", fit, outer)
+
+#printing the gamma parameters
+ggplot(fit, aes(x=distance, y=scale, col=model))+
+  geom_line()
