@@ -34,7 +34,7 @@ opt$bin_length <- 10
 
 #create a blank matrix that will hold the simulated data
 create_sim_matrix <- function(starting, ending, bl) {
-  #options(scipen = 999)
+  options(scipen = 999)
   vec <- seq(starting, ending, by = bl)
   new_matrix <- matrix(0L, nrow = length(vec), ncol = length(vec))
   colnames(new_matrix) <- paste(vec,"lab", sep="_")
@@ -113,16 +113,13 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
   num_tads <- sum((vec_list[[3]] == paste(x,":", y, sep = "")), na.rm = TRUE )
 
   dist <- abs((y-x)/bl)
-  if(dist>40){
-    dist <- 40
-  }
-  if(dist==0){
-    dist <- 1
+  if(dist>50){
+    dist <- 50
   }
     
   value <- 0;
   if(num_loops > 0) {
-    val_vec <- rgamma(num_loops, as.numeric(distr$scale[distr$distance == 1 & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == 1 & distr$model == "Loop&FL"]))
+    val_vec <- rgamma(num_loops, as.numeric(distr$scale[distr$distance == 0 & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == 0 & distr$model == "Loop&FL"]))
     value <- value + sum(round(val_vec))*2
   }
   
@@ -150,7 +147,7 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
   return(value)
 }
 
-create_hic_heatmap <- function(matrix, chr, starting, ending, bl, zr=c(0,30),
+create_hic_heatmap <- function(matrix, chr, starting, ending, bl, zr=c(0,600),
                                legend=T, lab="Simulated Data" ) {
   chromo <- paste("chr", chr, sep="")
   vec <- seq(starting, ending, by = bl)

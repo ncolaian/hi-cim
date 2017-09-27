@@ -105,7 +105,7 @@ combine_bins_if_necessary <- function(min_read_val, df) {
 
 test_spar_pdfs <- function(comb_df) {
   spar_vals <- seq(.15,1.55, by=.05)
-  pdf(file="/Users/phanstiel4/Documents/sim_graphs/bin_spar_an50.pdf", w=11, h=8)
+  pdf(file="/Users/ncolaian/Documents/phanstiel_lab/data/pdf_out/bin_spar_an50.pdf", w=11, h=8)
   smooth_min <- min(max(comb_df$means[comb_df$model == "Loop&FL"]),
                     max(comb_df$means[comb_df$model == "TADs"]),
                     max(comb_df$means[comb_df$model == "Background"]))
@@ -158,13 +158,19 @@ trial_pdfs <- function(comb_df) {
 }
 
 #### MAIN ####
+#TEST#
+#This is to test the binned data anaysis on all the reads we could find associated with tads and loop/flares
+#tad <- ddply(data4tad,"distance",summarize,total = sum(reads, na.rm = TRUE), means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)), model = "TADs", tot_mean = total/N)
+#fandl <- ddply(data4loop,"distance",summarize, total = sum(reads, na.rm = TRUE), means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)), model = "Loop&FL", tot_mean = total/N)
+#back <- ddply(data4back,"distance",summarize, total = sum(reads, na.rm = TRUE), means = mean(reads, na.rm = TRUE), sd = sd(reads, na.rm = TRUE), N = sum(!is.na(reads)), model = "Background", tot_mean = total/N)
+
 #separate df
 tad <- comb[comb$model=="TADs",]
 fandl <- comb[comb$model=="Loop&FL",]
 back <- comb[comb$model=="Background",]
 
 #create binned df
-tad <- combine_bins_if_necessary(450, tad)
+tad <- combine_bins_if_necessary(450, tad )
 fandl <- combine_bins_if_necessary(450, fandl)
 back <- combine_bins_if_necessary(450, back)
 
