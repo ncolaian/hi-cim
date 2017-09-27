@@ -184,9 +184,9 @@ fit_distributions <- function(comb_df) {
 }
 
 #main portion
-data4dist <- rbind(data4back, data4loop, data4tad) #test
-data4dist$model <- as.character(data4dist$model)
-data4dist$model <- gsub("\"","", data4dist$model)
+#data4dist <- rbind(data4back, data4loop, data4tad) #test
+#data4dist$model <- as.character(data4dist$model)
+#data4dist$model <- gsub("\"","", data4dist$model)
 #data4distr <- read.delim("/Users/phanstiel4/Documents/sim_graphs/distribution/full_distr.txt")
-fit_distributions(data4dist)
+#fit_distributions(data4dist)
 
