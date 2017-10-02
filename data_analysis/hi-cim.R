@@ -111,6 +111,10 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
   num_loops <- sum((vec_list[[1]] == paste(x,":", y, sep = "")), na.rm = TRUE )
   num_flares <- sum((vec_list[[2]] == paste(x,":", y, sep = "")), na.rm = TRUE)
   num_tads <- sum((vec_list[[3]] == paste(x,":", y, sep = "")), na.rm = TRUE )
+  
+
+  
+  
 
   dist <- abs((y-x)/bl)
   if(dist>50){
@@ -119,27 +123,36 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
     
   value <- 0;
   if(num_loops > 0) {
+    #test
+    num_loops <- 1
+    
     val_vec <- rgamma(num_loops, as.numeric(distr$scale[distr$distance == 0 & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == 0 & distr$model == "Loop&FL"]))
     value <- value + sum(round(val_vec))*2
   }
   
   if(num_flares > 0) {
+    num_flares <- 1
     val_vec <- rgamma(num_flares, as.numeric(distr$scale[distr$distance == dist & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Loop&FL"]))
     value <- value + sum(round(val_vec))
   }
   
   if(num_tads > 0) {
+    num_tads <- 1
     val_vec <- rgamma(num_tads, as.numeric(distr$scale[distr$distance == dist & distr$model == "TADs"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "TADs"]))
     value <- value + sum(round(val_vec))
   }
   
   #this means it is a background pixel
-  # if(value == 0) {
-  #   val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
-  #   value <- sum(as.integer(val_vec))
-  # }
-  val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
-  value <- value + sum(as.integer(val_vec))
+  if(value == 0) {
+     val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
+     value <- sum(as.integer(val_vec))
+   }
+  #val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
+  #value <- value + sum(as.integer(val_vec))
+  
+  #test for the drawing of only one feature
+  value <- value + max(as.integer(val_vec))
+  
   if(is.na(value)){
     value <- 0
   }
