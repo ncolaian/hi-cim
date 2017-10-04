@@ -91,8 +91,8 @@ def mark_unusable_rows(norm_f, bin_size, chrom, matrix_dict):
 			#Now have to go back and look at the bins before it
 			for starts in reversed(range(counter+1)):
 				starts = starts*bin_size
-				print starts
-				matrix_dict[starts][spot][0] = "NA"
+				if (abs(starts - spot) <= 200*bin_size):
+					matrix_dict[starts][spot][0] = "NA"
 				
 		counter += 1
 		line = norm_file.readline()
