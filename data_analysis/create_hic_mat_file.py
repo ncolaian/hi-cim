@@ -123,6 +123,7 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 	loop_list_end = []
 	#get the chrom string to test if the chrom is there
 	chrom = 'chr' + str(chrom)
+	print loops_f
 	
 	#go through the loop file making sure to only grab loops from the correct chromosome
 	loops_file = open(loops_f)
