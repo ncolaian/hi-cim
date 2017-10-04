@@ -61,7 +61,7 @@ human_chrom_sizes_dict = {
 ### FUNCTIONS ###
 
 def create_matrix( chrom, bin_size, human_chrom_sizes_dict ):
-	num_bins = math.ceil(human_chrom_sizes_dict[chrom]/bin_size)
+	num_bins = math.ceil(int(human_chrom_sizes_dict[chrom])/bin_size)
 	main_dict = {}
 	#create a list within a dictionary within a dictionary. The list will be formatted as (signal, #loops, #domains, #f0, #f1, #f2)
 	for i in range(num_bins+1) :
