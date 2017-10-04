@@ -240,8 +240,8 @@ def print_out_matrix( out_dir, matrix_dict, chrom ):
 	out.write("Chr\tBin1\tBin2\tSignal\tLoops\tDomains\tFlare_0\tFlare_1\tFlare_2\n")
 	
 	for start in matrix_dict.keys():
-		for end in matrix_dict[start].keys():
-			out.write(chrom, "\t", start, "\t", end, "\t", matrix_dict[start][stop][0], "\t", matrix_dict[start][stop][1],
+		for stop in matrix_dict[start].keys():
+			out.write(chrom, "\t", start, "\t", stop, "\t", matrix_dict[start][stop][0], "\t", matrix_dict[start][stop][1],
 			"\t", matrix_dict[start][stop][2], "\t", matrix_dict[start][stop][3], "\t", matrix_dict[start][stop][4], "\t",
 			matrix_dict[start][stop][5], "\n")
 	
