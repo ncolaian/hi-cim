@@ -194,8 +194,10 @@ def get_flare_locations( starts, ends, bin_size ):
 		
 		two_s, two_e = get_flare_vals_in_between(two_out_s, two_out_e, bin_size)
 		in_s, in_e = get_flare_vals_in_between(two_in_s, two_in_e, bin_size)
-		two_away_flares_s.extend(two_s.extend(in_s))
-		two_away_flares_e.extend(two_e.extend(in_e))
+		two_away_flares_s.extend(two_s)
+		two_away_flares_s.extend(in_s)
+		two_away_flares_e.extend(two_e)
+		two_away_flares_e.extend(in_e)
 		
 		#get the one away flares
 		one_out_s = starts[i] - 1*bin_size
