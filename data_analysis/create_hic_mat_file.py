@@ -89,7 +89,7 @@ def mark_unusable_rows(norm_f, bin_size, chrom, matrix_dict):
 			for ends in matrix_dict[spot].keys():
 				matrix_dict[spot][ends][0] = "NA"
 			#Now have to go back and look at the bins before it
-			for starts in reversed(range(counter+1)):
+			for starts in reversed(range(counter)):
 				starts = starts*bin_size
 				matrix_dict[starts][spot][0] = "NA"
 				
