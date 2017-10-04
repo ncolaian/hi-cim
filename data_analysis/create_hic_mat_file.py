@@ -101,8 +101,8 @@ def mark_unusable_rows(norm_f, bin_size, chrom, matrix_dict):
 	if len(matrix_dict) != counter:
 		print 'length of matrix is ', len(matrix_dict), '\nlength of the norm file is ', counter, '\nFilling the remaining bins with NAs'
 		for i in range( abs(len(matrix_dict) - counter) ):
-			for ends in matrix_dict[counter+i].keys():
-				matrix_dict[counter+i][ends][0] = "NA"
+			for ends in matrix_dict[(counter+i)*bin_size].keys():
+				matrix_dict[(counter+i)*bin_size][ends][0] = "NA"
 		
 
 	return(matrix_dict)
