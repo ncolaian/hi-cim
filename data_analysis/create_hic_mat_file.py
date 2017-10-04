@@ -241,9 +241,9 @@ def print_out_matrix( out_dir, matrix_dict, chrom ):
 	
 	for start in matrix_dict.keys():
 		for stop in matrix_dict[start].keys():
-			out.write(chrom, "\t", start, "\t", stop, "\t", matrix_dict[start][stop][0], "\t", matrix_dict[start][stop][1],
-			"\t", matrix_dict[start][stop][2], "\t", matrix_dict[start][stop][3], "\t", matrix_dict[start][stop][4], "\t",
-			matrix_dict[start][stop][5], "\n")
+			out.write(chrom + "\t" + start + "\t" + stop + "\t" + matrix_dict[start][stop][0] + "\t" + matrix_dict[start][stop][1],
+			"\t" + matrix_dict[start][stop][2] + "\t", matrix_dict[start][stop][3] + "\t", matrix_dict[start][stop][4] + "\t" +
+			matrix_dict[start][stop][5] + "\n")
 	
 	out.close
 	return(1)
