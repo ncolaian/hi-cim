@@ -116,8 +116,8 @@ def add_signal_values( bin_size, signal_file, matrix_dict):
 		line_vals = line.split("\t")
 		start = int(line_vals[0])*bin_size
 		end = int(line_vals[1])*bin_size
-		print start, "\t", end
-		matrix_dict[start][end][0] = float(line_vals[2])
+		if abs(end - start) <= 200*bin_size:
+			matrix_dict[start][end][0] = float(line_vals[2])
 		line = signal_file.readline()
 	
 	return(matrix_dict)
