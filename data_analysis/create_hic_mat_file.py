@@ -245,6 +245,7 @@ def print_out_matrix( out_dir, matrix_dict, chrom ):
 			"\t", matrix_dict[start][stop][2], "\t", matrix_dict[start][stop][3], "\t", matrix_dict[start][stop][4], "\t",
 			matrix_dict[start][stop][5], "\n")
 	
+	out.close
 	return(1)
 
 ### MAIN ###
@@ -261,4 +262,4 @@ mat_dict = add_signal_values(args.bin_size, args.count_file, mat_dict)
 mat_dict = add_features(args.chromosome, args.loop_file, mat_dict, args.bin_size)
 
 #print out the matrix and features ( 1 row per pixel )
-print_out_matrix(args.out_dir, mat_dict)
+print_out_matrix(args.out_dir, mat_dict, args.chromosome)
