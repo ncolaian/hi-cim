@@ -78,6 +78,7 @@ def create_matrix( chrom, bin_size, human_chrom_sizes_dict ):
 
 def mark_unusable_rows(norm_f, bin_size, chrom, matrix_dict):
 	counter = 0;
+	print norm_f
 	norm_file = open(norm_f)
 	
 	#loop through file
@@ -123,7 +124,6 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 	loop_list_end = []
 	#get the chrom string to test if the chrom is there
 	chrom = 'chr' + str(chrom)
-	print loops_f
 	
 	#go through the loop file making sure to only grab loops from the correct chromosome
 	loops_file = open(loops_f)
