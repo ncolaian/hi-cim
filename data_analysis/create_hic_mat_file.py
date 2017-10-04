@@ -187,36 +187,36 @@ def get_flare_locations( starts, ends, bin_size ):
 	
 	for i in range(len(starts)):
 		#get the two away flares
-		two_out_s = starts[i] - 2
-		two_out_e = ends[i] + 2
-		two_in_s = starts[i] + 2
-		two_in_e = ends[i] - 2
+		two_out_s = starts[i] - 2*bin_size
+		two_out_e = ends[i] + 2*bin_size
+		two_in_s = starts[i] + 2*bin_size
+		two_in_e = ends[i] - 2*bin_size
 		
-		two_s, two_e = get_flare_vals_in_between(two_out_s, two_out_e)
-		in_s, in_e = get_flare_vals_in_between(two_in_s, two_in_e)
+		two_s, two_e = get_flare_vals_in_between(two_out_s, two_out_e, bin_size)
+		in_s, in_e = get_flare_vals_in_between(two_in_s, two_in_e, bin_size)
 		two_away_flares_s.extend(two_s.extend(in_s))
 		two_away_flares_e.extend(two_e.extend(in_e))
 		
 		#get the one away flares
-		one_out_s = starts[i] - 1
-		one_out_e = ends[i] + 1
-		one_in_s = starts[i] + 1
-		one_in_e = ends[i] - 1
+		one_out_s = starts[i] - 1*bin_size
+		one_out_e = ends[i] + 1*bin_size
+		one_in_s = starts[i] + 1*bin_size
+		one_in_e = ends[i] - 1*bin_size
 		
-		one_s, one_e = get_flare_vals_in_between(one_out_s, one_out_e)
-		in_s, in_e = get_flare_vals_in_between(one_in_s, one_in_e)
+		one_s, one_e = get_flare_vals_in_between(one_out_s, one_out_e, bin_size)
+		in_s, in_e = get_flare_vals_in_between(one_in_s, one_in_e, bin_size)
 		one_away_flares_s.extend(one_s.extend(in_s))
 		one_away_flares_e.extend(one_e.extend(in_e))
 		
 		#get the flare at 0 away
-		flare_s, flare_e = get_flare_vals_in_between(starts[i], ends[i])
+		flare_s, flare_e = get_flare_vals_in_between(starts[i], ends[i], bin_size)
 		line_flares_s.extend(flare_s)
 		line_flares_e.extend(flare_e)
 		
 		
 	return([two_away_flares_s, two_away_flares_e, one_away_flares_s, one_away_flares_e, line_flares_s, line_flares_e])
 
-def get_flare_vals_in_between( start, end ):
+def get_flare_vals_in_between( start, end, bs ):
 	start_tot = []
 	end_tot = []
 	for i in range(start, end+bs, bs):
