@@ -78,7 +78,6 @@ def create_matrix( chrom, bin_size, human_chrom_sizes_dict ):
 
 def mark_unusable_rows(norm_f, bin_size, chrom, matrix_dict):
 	counter = 0;
-	print norm_f
 	norm_file = open(norm_f)
 	
 	#loop through file
@@ -244,7 +243,7 @@ def print_out_matrix( out_dir, matrix_dict, chrom ):
 mat_dict = create_matrix(args.chromosome, args.bin_size, human_chrom_sizes_dict)
 
 #put NA's in the locations where the reads were not enough
-mat_dict = mark_unusable_rows(args.chromosome, args.bin_size, args.norm_file, mat_dict)
+mat_dict = mark_unusable_rows(args.norm_file, args.bin_size, args.chromosome, mat_dict)
 
 #update the signal at each pixel
 mat_dict = add_signal_values(args.bin_size, args.count_file, mat_dict)
