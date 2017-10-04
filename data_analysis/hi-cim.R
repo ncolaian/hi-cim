@@ -22,7 +22,7 @@ opt = getopt(params)
 opt <- c("l", "a", 1, 1, 1, 1)
 names(opt) <- c("loop_file","distr_data", "chrom", "start", "end", "bin_length")
 opt$loop_file <- "/Users/ncolaian/Documents/phanstiel_lab/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
-opt$distr_data <- "/Users/ncolaian/Documents/phanstiel_lab/data/distr_50.txt"
+opt$distr_data <- "/Users/ncolaian/Documents/phanstiel_lab/data/distr_99.txt"
 opt$chrom <- 20
 opt$start <- 1600000
 opt$end <- 4000000
@@ -117,8 +117,8 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
   
 
   dist <- abs((y-x)/bl)
-  if(dist>50){
-    dist <- 50
+  if(dist>99){
+    dist <- 99
   }
     
   value <- 0;
