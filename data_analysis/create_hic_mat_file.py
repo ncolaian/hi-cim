@@ -170,8 +170,8 @@ def get_domain_locations( starts, ends, bin_size ):
 		#I add bin size because range does not include the end value
 		for j in range(starts[i], ends[i]+bin_size, bin_size):
 			for k in reversed(range(j,ends[i]+bin_size, bin_size)):
-				domain_position_starts.append(i)
-				domain_position_ends.append(j)
+				domain_position_starts.append(j)
+				domain_position_ends.append(k)
 				
 	
 	return( domain_position_starts, domain_position_ends)
