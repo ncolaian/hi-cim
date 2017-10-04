@@ -113,6 +113,7 @@ def add_signal_values( bin_size, signal_file, matrix_dict):
 		line_vals = line.split("\t")
 		start = line_vals[0]*bin_size
 		end = line_vals[1]*bin_size
+		print start
 		matrix_dict[start][end][0] = line_vals[2]
 		line = signal_file.readline()
 	
