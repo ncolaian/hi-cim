@@ -86,7 +86,7 @@ def mark_unusable_rows(norm_f, bin_size, chrom, matrix_dict):
 		if 'Inf' in line:
 			spot = counter*bin_size
 			#Gets everything associated with it.
-			for ends in matrix_dict[spot].keys:
+			for ends in matrix_dict[spot].keys():
 				matrix_dict[spot][ends][0] = "NA"
 			#Now have to go back and look at the bins before it
 			for starts in reversed(range(counter+1)):
