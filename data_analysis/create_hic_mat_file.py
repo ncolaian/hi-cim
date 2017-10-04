@@ -240,16 +240,16 @@ def print_out_matrix( out_dir, matrix_dict, chrom ):
 
 ### MAIN ###
 #Create a dictionary the size of the chromosome passed to a max distance off 200 bins
-mat_dict = create_matrix(args.chromosome, args.s, human_chrom_sizes_dict)
+mat_dict = create_matrix(args.chromosome, args.bin_size, human_chrom_sizes_dict)
 
 #put NA's in the locations where the reads were not enough
-mat_dict = mark_unusable_rows(args.chr, args.s, args.n, mat_dict)
+mat_dict = mark_unusable_rows(args.chromosome, args.bin_size, args.norm_file, mat_dict)
 
 #update the signal at each pixel
-mat_dict = add_signal_values(args.s, args.c, mat_dict)
+mat_dict = add_signal_values(args.bin_size, args.count_file, mat_dict)
 
 #add the features at each pixel
-mat_dict = add_features(args.chr, args.l, mat_dict, args.s)
+mat_dict = add_features(args.chromosome, args.loop_file, mat_dict, args.bin_size)
 
 #print out the matrix and features ( 1 row per pixel )
-print_out_matrix(mat_dict)
+print_out_matrix(args.out_dir, mat_dict)
