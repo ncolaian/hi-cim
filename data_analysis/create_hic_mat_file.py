@@ -78,10 +78,10 @@ def create_matrix( chrom, bin_size, human_chrom_sizes_dict ):
 
 def mark_unusable_rows(norm_f, bin_size, chrom, matrix_dict):
 	counter = 0;
-	norm_f = open(norm_f)
+	norm_file = open(norm_f)
 	
 	#loop through file
-	line = norm_f.readline()
+	line = norm_file.readline()
 	while line:
 		if 'Inf' in line:
 			spot = counter*bin_size
@@ -94,7 +94,7 @@ def mark_unusable_rows(norm_f, bin_size, chrom, matrix_dict):
 				matrix_dicts[starts][spot][0] = "NA"
 				
 		counter += 1
-		line = norm_f.readline()
+		line = norm_file.readline()
 	
 	#A sanity check
 	if len(matrix_dict) != counter:
@@ -125,7 +125,7 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 	chrom = 'chr' + str(chrom)
 	
 	#go through the loop file making sure to only grab loops from the correct chromosome
-	loops_f = open(loops_f)
+	loops_file = open(loops_f)
 	line = loops_f.readline()
 	while line:
 		line_vals = line.split("\t")
@@ -134,7 +134,7 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 			loop_list_start.append(line_vals[1])
 			loop_list_end.append(line_vals[4])
 	
-		line = loops_f.readline()
+		line = loops_file.readline()
 		
 	#go through and add loops to the matrix
 	for i in range(len(loop_list_start)):
