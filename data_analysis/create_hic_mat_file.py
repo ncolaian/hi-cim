@@ -240,7 +240,7 @@ def print_out_matrix( out_dir, matrix_dict, chrom ):
 
 ### MAIN ###
 #Create a dictionary the size of the chromosome passed to a max distance off 200 bins
-mat_dict = create_matrix(args.chr, args.s, human_chrom_sizes_dict)
+mat_dict = create_matrix(args.chromosome, args.s, human_chrom_sizes_dict)
 
 #put NA's in the locations where the reads were not enough
 mat_dict = mark_unusable_rows(args.chr, args.s, args.n, mat_dict)
