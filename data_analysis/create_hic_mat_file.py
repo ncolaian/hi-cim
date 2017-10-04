@@ -99,9 +99,12 @@ def mark_unusable_rows(norm_f, bin_size, chrom, matrix_dict):
 	
 	#A sanity check
 	if len(matrix_dict) != counter:
-		print 'length of matrix is ', len(matrix_dict), '\nlength of the norm file is ', counter
+		print 'length of matrix is ', len(matrix_dict), '\nlength of the norm file is ', counter, '\nFilling the remaining bins with NAs'
+		for i in range( abs(len(matrix_dict) - counter) ):
+			for ends in matrix_dict[counter+i].keys():
+				matrix_dict[counter+i][ends][0] = "NA"
 		
-	
+
 	return(matrix_dict)
 
 def add_signal_values( bin_size, signal_file, matrix_dict):
@@ -111,10 +114,9 @@ def add_signal_values( bin_size, signal_file, matrix_dict):
 	line = signal_file.readline()
 	while line:
 		line_vals = line.split("\t")
-		start = line_vals[0]*bin_size
-		end = line_vals[1]*bin_size
-		print start
-		matrix_dict[start][end][0] = line_vals[2]
+		start = int(line_vals[0])*bin_size
+		end = int(line_vals[1])*bin_size
+		matrix_dict[start][end][0] = float(line_vals[2])
 		line = signal_file.readline()
 	
 	return(matrix_dict)
@@ -133,8 +135,8 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 		line_vals = line.split("\t")
 		if( chrom in line_vals[0] and len(chrom) == len(line_vals[0]) and
 		   chrom in line_vals[3] and len(chrom) == len(line_vals[3]) ):
-			loop_list_start.append(line_vals[1])
-			loop_list_end.append(line_vals[4])
+			loop_list_start.append(int(line_vals[1]))
+			loop_list_end.append(int(line_vals[4]))
 	
 		line = loops_file.readline()
 		
