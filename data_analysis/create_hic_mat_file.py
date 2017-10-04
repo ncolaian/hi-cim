@@ -131,7 +131,7 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 	
 	#go through the loop file making sure to only grab loops from the correct chromosome
 	loops_file = open(loops_f)
-	line = loops_f.readline()
+	line = loops_file.readline()
 	while line:
 		line_vals = line.split("\t")
 		if( chrom in line_vals[0] and len(chrom) == len(line_vals[0]) and
