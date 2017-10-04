@@ -13,13 +13,13 @@ import math
 #fill in the arguements
 parser = argparse.ArgumentParser(description='Create a data matrix out of multiple HI-C inputs')
 
-parser.add_argument('-n', '--norm_file', type=file, required=True,
+parser.add_argument('-n', '--norm_file', type=str, required=True,
 					help='Normalization file that describes if a bin can be used or not')
-parser.add_argument('-c', '--count_file', type=file, required=True,
+parser.add_argument('-c', '--count_file', type=str, required=True,
 					help='File containing the normalized reads between bin')
 parser.add_argument('-o', '--out_dir', type=str, required=True,
 					help='The directory where you would like the output to be placed')
-parser.add_argument('-l', '--loop_file', type=file, required=True,
+parser.add_argument('-l', '--loop_file', type=str, required=True,
 					help='File that defines every loop')
 parser.add_argument('-chr', '--chromosome',type=int, required=True,
 					help='The chromosome you want to look at. File name will include this too')
