@@ -106,16 +106,18 @@ get_tads <- function(starting, ending, bl) {
   return(vec)
 }
 
-add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
+add_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
   options(scipen = 10, digits=10)
   num_loops <- sum((vec_list[[1]] == paste(x,":", y, sep = "")), na.rm = TRUE )
+  num_loops <- num_loops + sum((vec_list[[1]] == paste(y,":", x, sep = "")), na.rm = TRUE )
+  
   num_flares <- sum((vec_list[[2]] == paste(x,":", y, sep = "")), na.rm = TRUE)
+  num_flares <- num_flares + sum((vec_list[[2]] == paste(y,":", x, sep = "")), na.rm = TRUE)
+  
   num_tads <- sum((vec_list[[3]] == paste(x,":", y, sep = "")), na.rm = TRUE )
+  num_tads <- num_tads + sum((vec_list[[3]] == paste(y,":", x, sep = "")), na.rm = TRUE )
   
-
   
-  
-
   dist <- abs((y-x)/bl)
   if(dist>99){
     dist <- 99
@@ -123,27 +125,23 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
     
   value <- 0;
   if(num_loops > 0) {
-    #test
-    num_loops <- 1
     
     val_vec <- rgamma(num_loops, as.numeric(distr$scale[distr$distance == 0 & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == 0 & distr$model == "Loop&FL"]))
     value <- value + sum(round(val_vec))*2
   }
   
   if(num_flares > 0) {
-    num_flares <- 1
     val_vec <- rgamma(num_flares, as.numeric(distr$scale[distr$distance == dist & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Loop&FL"]))
     value <- value + sum(round(val_vec))
   }
   
   if(num_tads > 0) {
-    num_tads <- 1
     val_vec <- rgamma(num_tads, as.numeric(distr$scale[distr$distance == dist & distr$model == "TADs"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "TADs"]))
     value <- value + sum(round(val_vec))
   }
   
   #this means it is a background pixel
-  if(value == 0) {
+  if(value == 0 && w_bg == TRUE) {
      val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
      value <- sum(as.integer(val_vec))
    }
@@ -160,14 +158,89 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl) {
   return(value)
 }
 
-create_hic_heatmap <- function(matrix, chr, starting, ending, bl, zr=c(0,600),
+add_mean_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
+  options(scipen = 10, digits=10)
+  num_loops <- sum((vec_list[[1]] == paste(x,":", y, sep = "")), na.rm = TRUE )
+  num_loops <- num_loops + sum((vec_list[[1]] == paste(y,":", x, sep = "")), na.rm = TRUE )
+  
+  num_flares <- sum((vec_list[[2]] == paste(x,":", y, sep = "")), na.rm = TRUE)
+  num_flares <- num_flares + sum((vec_list[[2]] == paste(y,":", x, sep = "")), na.rm = TRUE)
+  
+  num_tads <- sum((vec_list[[3]] == paste(x,":", y, sep = "")), na.rm = TRUE )
+  num_tads <- num_tads + sum((vec_list[[3]] == paste(y,":", x, sep = "")), na.rm = TRUE )
+  
+  dist <- abs((y-x)/bl)
+  if(dist>99){
+    dist <- 99
+  }
+  
+  value <- 0;
+  if(num_loops > 0) {
+    loop_val <- distr$mu[distr$distance == 0 & distr$model == "Loop&FL"]
+    value <- value + loop_val
+  }
+  
+  if(num_flares > 0) {
+    bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
+    flare_val <- distr$mu[distr$distance == dist & distr$model == "Loop&FL"]
+    factor_v <- (flare_val/bg_val)^num_flares
+    
+    value <- value + bg_val*factor_v
+  }
+  
+  if(num_tads > 0) {
+    bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
+    tad_val <- distr$mu[distr$distance == dist & distr$model == "TADs"]
+    factor_v <- (tad_val/bg_val)^num_tads
+    
+    value <- value + bg_val*factor_v
+  }
+  
+  #this means it is a background pixel
+  if(value == 0 && w_bg == TRUE) {
+    val <- distr$mu[distr$distance == dist & distr$model == "Background"]
+    value <- value + val
+  }
+  #val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
+  #value <- value + sum(as.integer(val_vec))
+  
+  #test for the drawing of only one feature
+  #value <- value + max(as.integer(val_vec))
+  
+  if(is.na(value)){
+    value <- 0
+  }
+  
+  return(value)
+}
+
+create_hic_heatmap <- function(matrix1, matrix2, chr, starting, ending, bl, zr=c(0,400),
                                legend=T, lab="Simulated Data" ) {
   chromo <- paste("chr", chr, sep="")
   vec <- seq(starting, ending, by = bl)
-  colnames(matrix) <- vec
-  rownames(matrix) <- vec
+  colnames(matrix1) <- vec
+  rownames(matrix1) <- vec
+  colnames(matrix2) <- vec
+  rownames(matrix2) <- vec
   
-  hcplot <- plotHic2(matrix, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","dodgerblue2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "both", format = "full")
+  hcplot <- plotHic2(matrix1, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","dodgerblue2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "top", format = "full")
+  hcplot <- plotHic2(matrix2, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","firebrick2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "bottom", format = "full", add=T)
+  labelgenome(chrom=chromo,starting, ending, scale="Mb")
+  labelgenome(chrom=chromo,starting, ending, scale="Mb", side = 2, las = 2)
+  title(main="Simulated Hi-C Data")
+  
+  return(hcplot)
+}
+
+compare_real_hic_heatmap <- function(matrix1, real_mat, chr, starting, ending, bl, zr=c(0,400),
+                               legend=T, lab="Simulated Data" ) {
+  chromo <- paste("chr", chr, sep="")
+  vec <- seq(starting, ending, by = bl)
+  colnames(matrix1) <- vec
+  rownames(matrix1) <- vec
+  
+  hcplot <- plotHic2(matrix1, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","dodgerblue2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "top", format = "full")
+  hcplot <- plotHic2(real_mat, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","firebrick2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "bottom", format = "sparse", add=T)
   labelgenome(chrom=chromo,starting, ending, scale="Mb")
   labelgenome(chrom=chromo,starting, ending, scale="Mb", side = 2, las = 2)
   title(main="Simulated Hi-C Data")
@@ -204,10 +277,18 @@ for(i in rownames(sim_mat)) {
   sim_mat[i,] <- sapply(colnames(sim_mat), function(x) { add_value(as.integer(gsub( "_lab",replacement = "", x)), as.integer(gsub("_lab",replacement = "",i)), sim_mat, distr_data, non_bg, opt$bin_length)} )
 }
 
-#new_sim_mat <- sapply( rownames(sim_mat), function(x) sapply(colnames(sim_mat), function(y) { 
-    #add_value(as.integer(gsub("_lab",replacement = "",x)),as.integer(gsub("_lab",replacement = "" ,y)), sim_mat, distr_data, non_bg, opt$bin_length) }))
+# mean values used
+mean_mat <- create_sim_matrix(opt$start, opt$end, opt$bin_length)
+for(i in rownames(sim_mat)) {
+  mean_mat[i,] <- sapply(colnames(sim_mat), function(x) { add_mean_value(as.integer(gsub( "_lab",replacement = "", x)), as.integer(gsub("_lab",replacement = "",i)), mean_mat, distr_data, non_bg, opt$bin_length)} )
+}
 
-hicp <- create_hic_heatmap(sim_mat, opt$chrom, opt$start, opt$end, opt$bin_length)
+#Get the actual data
+real_data <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/count_matrix_chr20.txt", header = TRUE)
+figure_mat <- real_data[real_data$Bin1 >= opt$start & real_data$Bin2 <= opt$end, c("Bin1", "Bin2", "Signal") ]
+
+hicp <- create_hic_heatmap(mean_mat,sim_mat, opt$chrom, opt$start, opt$end, opt$bin_length)
+compare_hicp <- compare_real_hic_heatmap(mean_mat,figure_mat, opt$chrom, opt$start, opt$end, opt$bin_length)
 
 png("sim_hic.png")
 print(hicp)
