@@ -22,7 +22,7 @@ opt = getopt(params)
 opt <- c("l", "a", 1, 1, 1, 1)
 names(opt) <- c("loop_file","distr_data", "chrom", "start", "end", "bin_length")
 opt$loop_file <- "/Users/ncolaian/Documents/phanstiel_lab/data/CI_THP1_O_0.0.0.loops.10Kb.bedpe"
-opt$distr_data <- "/Users/ncolaian/Documents/phanstiel_lab/data/distr_99.txt"
+opt$distr_data <- "/Users/ncolaian/Documents/phanstiel_lab/data/distr_192.txt"
 opt$chrom <- 20
 opt$start <- 1600000
 opt$end <- 4000000
@@ -106,7 +106,7 @@ get_tads <- function(starting, ending, bl) {
   return(vec)
 }
 
-add_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
+add_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE, flares=TRUE, tads=TRUE) {
   options(scipen = 10, digits=10)
   num_loops <- sum((vec_list[[1]] == paste(x,":", y, sep = "")), na.rm = TRUE )
   num_loops <- num_loops + sum((vec_list[[1]] == paste(y,":", x, sep = "")), na.rm = TRUE )
@@ -119,37 +119,45 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
   
   
   dist <- abs((y-x)/bl)
-  if(dist>99){
-    dist <- 99
+  if(dist>192){
+    dist <- 192
   }
     
   value <- 0;
+  value_holder <- c()
   if(num_loops > 0) {
-    
     val_vec <- rgamma(num_loops, as.numeric(distr$scale[distr$distance == 0 & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == 0 & distr$model == "Loop&FL"]))
-    value <- value + sum(round(val_vec))*2
+    value_holder <- append(value_holder, mean(round(val_vec))*2)
   }
   
-  if(num_flares > 0) {
+  if(num_flares > 0 && flares == TRUE) {
+    bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
+    flare_val <- distr$mu[distr$distance == dist & distr$model == "Loop&FL"]
+    factor_v <- (flare_val/bg_val)^num_flares
+    
     val_vec <- rgamma(num_flares, as.numeric(distr$scale[distr$distance == dist & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Loop&FL"]))
-    value <- value + sum(round(val_vec))
+    value_holder <- append(value_holder, mean(round(val_vec))^factor_v)
   }
   
-  if(num_tads > 0) {
+  if(num_tads > 0 && tads == TRUE) {
+    bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
+    tad_val <- distr$mu[distr$distance == dist & distr$model == "TADs"]
+    factor_v <- (tad_val/bg_val)^num_tads
+    
     val_vec <- rgamma(num_tads, as.numeric(distr$scale[distr$distance == dist & distr$model == "TADs"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "TADs"]))
-    value <- value + sum(round(val_vec))
+    value_holder <- append(value_holder, mean(round(val_vec))^factor_v)
   }
   
   #this means it is a background pixel
   if(value == 0 && w_bg == TRUE) {
      val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
-     value <- sum(as.integer(val_vec))
+     value_holder <- append(value_holder, sum(as.integer(val_vec)))
    }
   #val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
   #value <- value + sum(as.integer(val_vec))
   
   #test for the drawing of only one feature
-  value <- value + max(as.integer(val_vec))
+  value <- max(value_holder)
   
   if(is.na(value)){
     value <- 0
@@ -158,7 +166,7 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
   return(value)
 }
 
-add_mean_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
+add_mean_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE, flares=TRUE, tads=TRUE) {
   options(scipen = 10, digits=10)
   num_loops <- sum((vec_list[[1]] == paste(x,":", y, sep = "")), na.rm = TRUE )
   num_loops <- num_loops + sum((vec_list[[1]] == paste(y,":", x, sep = "")), na.rm = TRUE )
@@ -170,8 +178,8 @@ add_mean_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
   num_tads <- num_tads + sum((vec_list[[3]] == paste(y,":", x, sep = "")), na.rm = TRUE )
   
   dist <- abs((y-x)/bl)
-  if(dist>99){
-    dist <- 99
+  if(dist>192){
+    dist <- 192
   }
   
   value <- 0;
@@ -180,7 +188,7 @@ add_mean_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
     value <- value + loop_val
   }
   
-  if(num_flares > 0) {
+  if(num_flares > 0 && flares == TRUE) {
     bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
     flare_val <- distr$mu[distr$distance == dist & distr$model == "Loop&FL"]
     factor_v <- (flare_val/bg_val)^num_flares
@@ -188,7 +196,7 @@ add_mean_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
     value <- value + bg_val*factor_v
   }
   
-  if(num_tads > 0) {
+  if(num_tads > 0 && tads == TRUE) {
     bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
     tad_val <- distr$mu[distr$distance == dist & distr$model == "TADs"]
     factor_v <- (tad_val/bg_val)^num_tads
@@ -288,7 +296,7 @@ real_data <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/count_matr
 figure_mat <- real_data[real_data$Bin1 >= opt$start & real_data$Bin2 <= opt$end, c("Bin1", "Bin2", "Signal") ]
 
 hicp <- create_hic_heatmap(mean_mat,sim_mat, opt$chrom, opt$start, opt$end, opt$bin_length)
-compare_hicp <- compare_real_hic_heatmap(mean_mat,figure_mat, opt$chrom, opt$start, opt$end, opt$bin_length)
+compare_hicp <- compare_real_hic_heatmap(sim_mat,figure_mat, opt$chrom, opt$start, opt$end, opt$bin_length)
 
 png("sim_hic.png")
 print(hicp)
