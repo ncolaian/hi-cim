@@ -29,7 +29,7 @@ parser.add_argument('-s', '--bin_size', type=int, required=True,
 #create an arguement object after reading in the arguments
 args = parser.parse_args()
 
-#Add a dictionary that contains all the chromome lengths for humans
+#Add a dictionary that contains all the chromosome lengths for humans
 #Data obtained from genome hg19 on the ucsc genome browser
 human_chrom_sizes_dict = {
 	'1':249250621,
@@ -116,7 +116,7 @@ def add_signal_values( bin_size, signal_file, matrix_dict):
 		line_vals = line.split("\t")
 		start = int(line_vals[0])*bin_size
 		end = int(line_vals[1])*bin_size
-		if abs(end - start) <= 200*bin_size:
+		if abs(end - start) <= 200*bin_size and matrix_dict[start][end][0] != "NA":
 			matrix_dict[start][end][0] = float(line_vals[2])
 		line = signal_file.readline()
 	
@@ -151,9 +151,10 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 	for i in range(len(dom_starts)):
 		matrix_dict[dom_starts[i]][dom_ends[i]][2] += 1 
 	
-	#get and set flares ( the return from get flare location 0&1 is two away 2&3 is one away and 4&5 is 0 away)
+	#get and set flares ( the return from get flare location 0&1 is two away outside of tad 2&3 is two away inside tad 4&5 is one away outside
+	# 6&7 is one away inside and 8&9 is 0 away)
 	lists_of_lists_starts_stops = get_flare_locations(loop_list_start, loop_list_end, bin_size)
-	count = 5;
+	count = 7;
 	for i in range(0, len(lists_of_lists_starts_stops), 2):
 		for j in range(len(lists_of_lists_starts_stops[i])):
 			matrix_dict[lists_of_lists_starts_stops[i][j]][lists_of_lists_starts_stops[i+1][j]][count] += 1
@@ -177,10 +178,14 @@ def get_domain_locations( starts, ends, bin_size ):
 	return( domain_position_starts, domain_position_ends)
 
 def get_flare_locations( starts, ends, bin_size ):
-	two_away_flares_s = []
-	two_away_flares_e = []
-	one_away_flares_s = []
-	one_away_flares_e = []
+	two_out_flares_s = []
+	two_out_flares_e = []
+	two_in_flares_s = []
+	two_in_flares_e = []
+	one_out_flares_s = []
+	one_out_flares_e = []
+	one_in_flares_s = []
+	one_in_flares_e = []
 	line_flares_s = []
 	line_flares_e = []
 	
@@ -192,12 +197,8 @@ def get_flare_locations( starts, ends, bin_size ):
 		two_in_s = starts[i] + 2*bin_size
 		two_in_e = ends[i] - 2*bin_size
 		
-		two_s, two_e = get_flare_vals_in_between(two_out_s, two_out_e, bin_size)
-		in_s, in_e = get_flare_vals_in_between(two_in_s, two_in_e, bin_size)
-		two_away_flares_s.extend(two_s)
-		two_away_flares_s.extend(in_s)
-		two_away_flares_e.extend(two_e)
-		two_away_flares_e.extend(in_e)
+		two_out_flares_s, two_out_flares_e = get_flare_vals_in_between(two_out_s, two_out_e, bin_size)
+		two_in_flares_s, two_in_flares_e = get_flare_vals_in_between(two_in_s, two_in_e, bin_size)
 		
 		#get the one away flares
 		one_out_s = starts[i] - 1*bin_size
@@ -205,12 +206,8 @@ def get_flare_locations( starts, ends, bin_size ):
 		one_in_s = starts[i] + 1*bin_size
 		one_in_e = ends[i] - 1*bin_size
 		
-		one_s, one_e = get_flare_vals_in_between(one_out_s, one_out_e, bin_size)
-		in_s, in_e = get_flare_vals_in_between(one_in_s, one_in_e, bin_size)
-		one_away_flares_s.extend(one_s)
-		one_away_flares_s.extend(in_s)
-		one_away_flares_e.extend(one_e)
-		one_away_flares_e.extend(in_e)
+		one_out_flares_s, one_out_flares_e = get_flare_vals_in_between(one_out_s, one_out_e, bin_size)
+		one_in_flares_s, one_in_flares_e = get_flare_vals_in_between(one_in_s, one_in_e, bin_size)
 		
 		#get the flare at 0 away
 		flare_s, flare_e = get_flare_vals_in_between(starts[i], ends[i], bin_size)
@@ -218,7 +215,8 @@ def get_flare_locations( starts, ends, bin_size ):
 		line_flares_e.extend(flare_e)
 		
 		
-	return([two_away_flares_s, two_away_flares_e, one_away_flares_s, one_away_flares_e, line_flares_s, line_flares_e])
+	return([two_out_flares_s, two_out_flares_e, two_in_flares_s, two_in_flares_e, one_out_flares_s, one_out_flares_e,
+			one_out_flares_s, one_out_flares_e, line_flares_s, line_flares_e])
 
 def get_flare_vals_in_between( start, end, bs ):
 	start_tot = []
@@ -237,13 +235,13 @@ def print_out_matrix( out_dir, matrix_dict, chrom ):
 	out_file = out_dir + "/" + "count_matrix_chr" + str(chrom) + ".txt"
 	out = open(out_file, 'w')
 	
-	out.write("Chr\tBin1\tBin2\tSignal\tLoops\tDomains\tFlare_0\tFlare_1\tFlare_2\n")
+	out.write("Chr\tBin1\tBin2\tSignal\tLoops\tDomains\tFlare_0\tFlare_1_in\tFlare_1_out\tFlare_2_in\tFlare_2_out\n")
 	
 	for start in matrix_dict.keys():
 		for stop in matrix_dict[start].keys():
 			out.write(str(chrom) + "\t" + str(start) + "\t" + str(stop) + "\t" + str(matrix_dict[start][stop][0]) + "\t" + str(matrix_dict[start][stop][1]) +
 			"\t" + str(matrix_dict[start][stop][2]) + "\t" + str(matrix_dict[start][stop][3]) + "\t" + str(matrix_dict[start][stop][4]) + "\t" +
-			str(matrix_dict[start][stop][5]) + "\n")
+			str(matrix_dict[start][stop][5]) + "\t" + str(matrix_dict[start][stop][6]) + "\t" + str(matrix_dict[start][stop][7]) +  "\n")
 	
 	out.close
 	return(1)
