@@ -71,7 +71,7 @@ def create_matrix( chrom, bin_size, human_chrom_sizes_dict ):
 			if spot > human_chrom_sizes_dict[str(chrom)]:
 				break
 			#this creates the link between one bin and the other "end" bin
-			main_dict[i*bin_size][spot] = [0,0,0,0,0,0,0,0]
+			main_dict[i*bin_size][spot] = [0,0,0,0,0,0,0,0,""]
 		
 	
 	return main_dict
