@@ -175,7 +175,7 @@ def get_domain_locations( starts, ends, bin_size ):
 			for k in reversed(range(j,ends[i]+bin_size, bin_size)):
 				domain_position_starts.append(j)
 				domain_position_ends.append(k)
-				loop_distance.append((starts[i]-ends[i]/bin_size))
+				loop_distance.append((ends[i]-starts[i])/bin_size)
 				
 	
 	return( domain_position_starts, domain_position_ends, loop_distance)
@@ -244,7 +244,7 @@ def print_out_matrix( out_dir, matrix_dict, chrom ):
 		for stop in matrix_dict[start].keys():
 			out.write(str(chrom) + "\t" + str(start) + "\t" + str(stop) + "\t" + str(matrix_dict[start][stop][0]) + "\t" + str(matrix_dict[start][stop][1]) +
 			"\t" + str(matrix_dict[start][stop][2]) + "\t" + str(matrix_dict[start][stop][3]) + "\t" + str(matrix_dict[start][stop][4]) + "\t" +
-			str(matrix_dict[start][stop][5]) + "\t" + str(matrix_dict[start][stop][6]) + "\t" + str(matrix_dict[start][stop][7]) + str(matrix_dict[start][stop][8]) + "\n")
+			str(matrix_dict[start][stop][5]) + "\t" + str(matrix_dict[start][stop][6]) + "\t" + str(matrix_dict[start][stop][7]) +  "\t" + str(matrix_dict[start][stop][8]) + "\n")
 	
 	out.close
 	return(1)
