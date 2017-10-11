@@ -147,9 +147,10 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 			matrix_dict[loop_list_start[i]][loop_list_end[i]][1] += 1
 	
 	#get and set domains
-	dom_starts, dom_ends = get_domain_locations(loop_list_start, loop_list_end, bin_size)
+	dom_starts, dom_ends, loop_dist = get_domain_locations(loop_list_start, loop_list_end, bin_size)
 	for i in range(len(dom_starts)):
-		matrix_dict[dom_starts[i]][dom_ends[i]][2] += 1 
+		matrix_dict[dom_starts[i]][dom_ends[i]][2] += 1
+		matrix_dict[dom_starts[i]][dom_ends[i]][8] += "," + str(loop_dist[i])
 	
 	#get and set flares ( the return from get flare location 0&1 is two away outside of tad 2&3 is two away inside tad 4&5 is one away outside
 	# 6&7 is one away inside and 8&9 is 0 away)
@@ -165,6 +166,7 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 def get_domain_locations( starts, ends, bin_size ):
 	domain_position_starts = []
 	domain_position_ends = []
+	loop_distance = []
 	
 	#Get domain structure for each loop
 	for i in range(len(starts)):
@@ -173,9 +175,10 @@ def get_domain_locations( starts, ends, bin_size ):
 			for k in reversed(range(j,ends[i]+bin_size, bin_size)):
 				domain_position_starts.append(j)
 				domain_position_ends.append(k)
+				loop_distance.append((starts[i]-ends[i]/bin_size))
 				
 	
-	return( domain_position_starts, domain_position_ends)
+	return( domain_position_starts, domain_position_ends, loop_distance)
 
 def get_flare_locations( starts, ends, bin_size ):
 	two_out_flares_s = []
@@ -235,13 +238,13 @@ def print_out_matrix( out_dir, matrix_dict, chrom ):
 	out_file = out_dir + "/" + "count_matrix_chr" + str(chrom) + ".txt"
 	out = open(out_file, 'w')
 	
-	out.write("Chr\tBin1\tBin2\tSignal\tLoops\tDomains\tFlare_0\tFlare_1_in\tFlare_1_out\tFlare_2_in\tFlare_2_out\n")
+	out.write("Chr\tBin1\tBin2\tSignal\tLoops\tDomains\tFlare_0\tFlare_1_in\tFlare_1_out\tFlare_2_in\tFlare_2_out\tDomain_dists\n")
 	
 	for start in matrix_dict.keys():
 		for stop in matrix_dict[start].keys():
 			out.write(str(chrom) + "\t" + str(start) + "\t" + str(stop) + "\t" + str(matrix_dict[start][stop][0]) + "\t" + str(matrix_dict[start][stop][1]) +
 			"\t" + str(matrix_dict[start][stop][2]) + "\t" + str(matrix_dict[start][stop][3]) + "\t" + str(matrix_dict[start][stop][4]) + "\t" +
-			str(matrix_dict[start][stop][5]) + "\t" + str(matrix_dict[start][stop][6]) + "\t" + str(matrix_dict[start][stop][7]) +  "\n")
+			str(matrix_dict[start][stop][5]) + "\t" + str(matrix_dict[start][stop][6]) + "\t" + str(matrix_dict[start][stop][7]) + str(matrix_dict[start][stop][8]) + "\n")
 	
 	out.close
 	return(1)
