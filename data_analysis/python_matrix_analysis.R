@@ -6,13 +6,12 @@ library(ggplot2)
 library(plyr)
 
 #### Subroutines ####
-fit_distributions <- function(tad_df, loop_df, back_df) {
+fit_distributions <- function(tad_df, loop_df, back_df, dist_vals) {
   print("Start")
   tad_df$signal <- tad_df$signal+1
   loop_df$signal <- loop_df$signal+1
   back_df$signal <- back_df$signal+1
   
-  dist_vals <- 192
   dist_matrix <- c()
   print("Looping")
   for( i in 0:dist_vals) {
@@ -29,8 +28,6 @@ fit_distributions <- function(tad_df, loop_df, back_df) {
     nbin_lf <- fitdistr(as.integer(lf), "negative binomial")
     gam_lf <- fitdistr(as.integer(lf), "gamma")
     print("lf_done")
-    
-    b <- b+1
     nbin_b <- fitdistr(as.integer(b), "negative binomial")
     print("b-bin")
     gam_b <- fitdistr(as.integer(b), "gamma")
@@ -56,7 +53,7 @@ fit_distributions <- function(tad_df, loop_df, back_df) {
   dist_matrix$model <- as.character(dist_matrix$model)
   dist_matrix$theta <- as.numeric(as.character(dist_matrix$theta))
   dist_matrix$mu <- as.numeric(as.character(dist_matrix$mu))
-  dist_matrix$scale <- as.numeric(as.character(dist_matrix$scale))
+  dist_matrix$shape <- as.numeric(as.character(dist_matrix$shape))
   dist_matrix$rate <- as.numeric(as.character(dist_matrix$rate))
   
   return(as.data.frame(dist_matrix))
@@ -112,14 +109,14 @@ bin_things <- function(df,bin_total) {
 
 
 #WORK WITH NEW DATAFRAME
-real_data <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/count_matrix_chr20.txt", header = TRUE)
+real_data <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/count_matrix_chr20_norm.txt", header = TRUE)
 real_data$distance <- abs(real_data$Bin2 - real_data$Bin1)/10000
 real_data <- na.omit(real_data)
 
 real_tad <- real_data[real_data$Domains > 0,]
-real_flare <- real_data[real_data$Flare_0 > 0 | real_data$Flare_1 > 0 | real_data$Flare_2 > 0, ]
-real_bg <- real_data[real_data$Flare_0 == 0 & real_data$Flare_1 == 0 & real_data$Flare_2 == 0 &
-                       real_data$Domains == 0 & real_data$Loops == 0, ]
+real_flare <- real_data[real_data$Flare_0 > 0 | real_data$Flare_1_in > 0 | real_data$Flare_2_in > 0 | real_data$Flare_1_out > 0 | real_data$Flare_2_out > 0, ]
+real_bg <- real_data[real_data$Flare_0 == 0 & real_data$Flare_1_in == 0 & real_data$Flare_2_in == 0 &
+                       real_data$Flare_1_out == 0 & real_data$Flare_2_out == 0 & real_data$Domains == 0 & real_data$Loops == 0, ]
 
 real_tad <- data.frame(real_tad$distance, real_tad$Signal, "TADs")
 real_flare <- data.frame(real_flare$distance, real_flare$Signal, "Loop&FL")
@@ -143,12 +140,57 @@ real_tad <- bin_things(real_tad, 192)
 real_flare <- bin_things(real_flare,192)
 real_bg <- bin_things(real_bg,192)
 
-fit <- fit_distributions(real_tad, real_flare, real_bg)
+fit <- fit_distributions(real_tad, real_flare, real_bg, 192)
 
 max(real_bg$distance)
-ggplot(fit, aes(x=distance, y=scale/rate^2, col=model))+
+ggplot(fit, aes(x=distance, y=mu, col=model))+
   geom_line()
 hist(real_bg$signal[real_bg$distance==150])
 
 outer <- "/Users/ncolaian/Documents/phanstiel_lab/data/"
 print_out_data("distr_192", fit, outer)
+
+#### TAD ANALYSIS ####
+#This is analysis of the different tads
+tad1 <- real_data[real_data$Domains == 1,]
+tad2 <- real_data[real_data$Domains == 2,]
+tad_great <- real_data[real_data$Domains > 2,]
+
+tad1 <- data.frame(tad1$distance, tad1$Signal, "TADs")
+tad2 <- data.frame(tad2$distance, tad2$Signal, "Loop&FL")
+tad_great <- data.frame(tad_great$distance, tad_great$Signal, "Background")
+
+#get correct names of real data 
+colnames(tad1) <- c("distance", "signal", "model")
+colnames(tad2) <- c("distance", "signal", "model")
+colnames(tad_great) <- c("distance", "signal", "model")
+
+tad1$model <- as.character(tad1$model)
+tad2$model <- as.character(tad2$model)
+tad_great$model <- as.character(tad_great$model)
+
+#analysis
+tad1_b <- bin_things(tad1, 146)
+tad2_b <- bin_things(tad2,146)
+tad_great_b <- bin_things(tad_great,146)
+fit <- fit_distributions(tad1_b, tad2_b, tad_great_b, 146)
+fit$model[fit$model == "Loop&FL"] <- "TAD2"
+fit$model[fit$model == "Background"] <- "TAD_more"
+ggplot(fit, aes(x=distance, y=log(mu), col=model))+
+  geom_line()
+
+#Checking the point to cut off small vs large
+fit1 <- fit[fit$model == "TADs",]
+fit2 <- fit[fit$model == "TAD2",]
+for ( i in unique(fit$distance) ) {
+  variance <- (fit1$shape[fit1$distance == i]/(fit1$rate[fit1$distance == i]^2))
+  sd <- sqrt(variance)
+  sd <- log(sd)
+  print(c(log(fit1$mu[fit1$distance == i]),log(fit2$mu[fit2$distance == i])))
+  if ( log(fit1$mu[fit1$distance == i])+sd < log(fit2$mu[fit2$distance == i])) {
+    break
+  }
+}
+
+outer <- "/Users/ncolaian/Documents/phanstiel_lab/data/"
+print_out_data("tad_distr_146", fit, outer)
