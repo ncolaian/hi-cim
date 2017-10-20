@@ -53,45 +53,47 @@ get_loop_data <- function(starting, ending, loop, chr) {
   return(needed_vals)
 }
 
-get_areas_in_tads_flares_loops <- function(need_loop, bl,flares=TRUE, tads=TRUE) {
+get_areas_in_tads_flares_loops <- function(need_loop, real, bl,flares=TRUE, tads=TRUE) {
   loop_vec <- c()
   flare_vec <- c()
   tad_vec <- c()
   tad_loop <- c()
   flare_loop <- c()
-
+  
   for(i in seq(1:length(need_loop$abin_start))) {
     starting <- need_loop$abin_start[i]
     ending <- need_loop$bbin_start[i]
     dist <- (ending-starting)/bl
+    sig <- real$Signal[real$Bin1 == starting & real$Bin2 == ending]
     
     #always get loops
     loop_vec <- append(loop_vec, paste(starting, ":", ending, sep = ""))
     
     #get both flares and tads
     if(flares == TRUE && tads == TRUE) {
+      #f_val and t_val keep track of how many tad pixels and flare pixels are added
       f_val <- length(flare_vec)
       t_val <- length(tad_vec)
       flare_vec <- append(flare_vec, get_flares(starting, ending, bl))
       tad_vec <- append(tad_vec, get_tads(starting,ending, bl))
       f_val <- length(flare_vec) - f_val
       t_val <- length(tad_vec) - t_val
-      tad_loop <- append(tad_loop, rep(dist,t_val))
-      flare_loop <- append(flare_loop, rep(dist,f_val))
+      tad_loop <- append(tad_loop, rep(sig,t_val))
+      flare_loop <- append(flare_loop, rep(sig,f_val))
     }
     #just get tads
     else if( tads == TRUE && flares == FALSE ) {
       t_val <- length(tad_vec)
       tad_vec <- append(tad_vec, get_tads(starting,ending, bl, fl = FALSE))
       t_val <- length(tad_vec) - t_val
-      tad_loop <- append(tad_loop, rep(dist,t_val))
+      tad_loop <- append(tad_loop, rep(sig,t_val))
     }
     #just get flares
     else{
       f_val <- length(flare_vec)
       flare_vec <- append(flare_vec, get_flares(starting, ending, bl))
       f_val <- length(flare_vec) - f_val
-      flare_loop <- append(flare_loop, rep(dist,f_val))
+      flare_loop <- append(flare_loop, rep(sig,f_val))
     }
   }
   
@@ -135,73 +137,13 @@ get_tads <- function(starting, ending, bl, fl=TRUE) {
     new_s <- starting+adjust
     new_e <- ending-adjust
   }
-
+  
   for(spot in seq(from = new_s, to = new_e, by=bl)) {
     new <- sapply(seq(spot, new_e, by = bl), function(x) {x <- paste(spot,":",x, sep=""); return(x)})
     vec <- append(vec, new)
   }
   
   return(vec)
-}
-
-add_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
-  options(scipen = 10, digits=10)
-  num_loops <- sum((vec_list[[1]] == paste(x,":", y, sep = "")), na.rm = TRUE )
-  num_loops <- num_loops + sum((vec_list[[1]] == paste(y,":", x, sep = "")), na.rm = TRUE )
-  
-  num_flares <- sum((vec_list[[2]] == paste(x,":", y, sep = "")), na.rm = TRUE)
-  num_flares <- num_flares + sum((vec_list[[2]] == paste(y,":", x, sep = "")), na.rm = TRUE)
-  
-  num_tads <- sum((vec_list[[3]] == paste(x,":", y, sep = "")), na.rm = TRUE )
-  num_tads <- num_tads + sum((vec_list[[3]] == paste(y,":", x, sep = "")), na.rm = TRUE )
-  
-  
-  dist <- abs((y-x)/bl)
-  if(dist>192){
-    dist <- 192
-  }
-    
-  value <- 0;
-  value_holder <- c()
-  if(num_loops > 0) {
-    val_vec <- rgamma(num_loops, as.numeric(distr$scale[distr$distance == 0 & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == 0 & distr$model == "Loop&FL"]))
-    value_holder <- append(value_holder, mean(round(val_vec))*2)
-  }
-  
-  if(num_flares > 0) {
-    bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
-    flare_val <- distr$mu[distr$distance == dist & distr$model == "Loop&FL"]
-    factor_v <- (flare_val/bg_val)^num_flares
-    
-    val_vec <- rgamma(num_flares, as.numeric(distr$scale[distr$distance == dist & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Loop&FL"]))
-    value_holder <- append(value_holder, mean(round(val_vec))^factor_v)
-  }
-  
-  if(num_tads > 0) {
-    bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
-    tad_val <- distr$mu[distr$distance == dist & distr$model == "TADs"]
-    factor_v <- (tad_val/bg_val)^num_tads
-    
-    val_vec <- rgamma(num_tads, as.numeric(distr$scale[distr$distance == dist & distr$model == "TADs"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "TADs"]))
-    value_holder <- append(value_holder, mean(round(val_vec))^factor_v)
-  }
-  
-  #this means it is a background pixel
-  if(value == 0 && w_bg == TRUE) {
-     val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
-     value_holder <- append(value_holder, sum(as.integer(val_vec)))
-   }
-  #val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
-  #value <- value + sum(as.integer(val_vec))
-  
-  #test for the drawing of only one feature
-  value <- max(value_holder)
-  
-  if(is.na(value)){
-    value <- 0
-  }
-  
-  return(value)
 }
 
 add_mean_value <- function(x,y, full_matrix, distr, tad_distr, tad_loop_dist, vec_list, bl, w_bg=TRUE) {
@@ -241,26 +183,27 @@ add_mean_value <- function(x,y, full_matrix, distr, tad_distr, tad_loop_dist, ve
   }
   
   if(num_tads > 0) {
+    #get the location in the tad_sig values are held
     tad_loops <- which(vec_list[[3]] %in% paste(x,":", y, sep = ""))
     tad_loops <- append(tad_loops, which(vec_list[[3]] %in% paste(y,":", x, sep = "")))
     
     #get the min loop pixel is associated with
     loop <- min(vec_list[[5]][tad_loops])
-    loop <- ceiling(loop/20)*20
     if (dist > max(tad_distr$distance) ) {
       dist <- max(tad_distr$distance)
     }
     t_val <- 0
     if(num_tads == 1) {
-      t_val <- t_val + tad_loop_dist$mu[tad_loop_dist$distance == dist & tad_loop_dist$model == loop]
+      sig_fact <- tad_signal_vs_loop(loop)
+      t_val <- t_val + sig_fact * distr$mu[distr$distance == dist & distr$model == "TADs"]
     }
     else if ( num_tads == 2) {
       #Take into account of amount of loops
       t_fact <- (tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TAD2"]/
                    tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TADs"])
-      
+      sig_fact <- tad_signal_vs_loop(loop)
       #take into account loop dist associated with pixel
-      t_val <- t_val + t_fact*tad_loop_dist$mu[tad_loop_dist$distance == dist & tad_loop_dist$model == loop]
+      t_val <- t_val + t_fact*sig_fact*distr$mu[distr$distance == dist & distr$model == "TADs"]
     }
     else {
       #Take into account of amount of loops
@@ -270,7 +213,8 @@ add_mean_value <- function(x,y, full_matrix, distr, tad_distr, tad_loop_dist, ve
       if(t_fact < 1) {
         t_fact <- 1/t_fact
       }
-      t_val <- t_val + t_fact*tad_loop_dist$mu[tad_loop_dist$distance == dist & tad_loop_dist$model == loop]
+      sig_fact <- tad_signal_vs_loop(loop)
+      t_val <- t_val + t_fact*sig_fact*distr$mu[distr$distance == dist & distr$model == "TADs"]
     }
     
     value <- value + t_val
@@ -295,6 +239,10 @@ add_mean_value <- function(x,y, full_matrix, distr, tad_distr, tad_loop_dist, ve
   return(value)
 }
 
+tad_signal_vs_loop <- function(x) {
+  val <- .258379 + .176503*log(x) + rnorm(1, mean = 0, sd = .1169^2)
+  return(val)
+}
 
 create_hic_heatmap <- function(matrix1, matrix2, chr, starting, ending, bl, zr=c(0,400),
                                legend=T, lab="Simulated Data" ) {
@@ -315,9 +263,9 @@ create_hic_heatmap <- function(matrix1, matrix2, chr, starting, ending, bl, zr=c
 }
 
 compare_real_hic_heatmap <- function(matrix1, real_mat, chr, starting, ending, bl, zr=c(0,300),
-                               legend=T, lab="Simulated Data", sim_v_real=TRUE ) {
+                                     legend=T, lab="Simulated Data", sim_v_real=TRUE ) {
   chromo <- paste("chr", chr, sep="")
-
+  
   if ( sim_v_real == FALSE ) {
     hcplot <- plotHic2(matrix1, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","firebrick2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "top", format = "sparse")
   }
@@ -330,12 +278,7 @@ compare_real_hic_heatmap <- function(matrix1, real_mat, chr, starting, ending, b
   hcplot <- plotHic2(real_mat, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","firebrick2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "bottom", format = "sparse", add=T)
   labelgenome(chrom=chromo,starting, ending, scale="Mb")
   labelgenome(chrom=chromo,starting, ending, scale="Mb", side = 2, las = 2)
-  if ( sim_v_real == FALSE ) {
-    title(main="Real Hi-C Data")
-  }
-  else {
-    title(main="Simulated Hi-C Data")
-  }
+  title(main="Real Hi-C Data")
   
   return(hcplot)
 }
@@ -385,7 +328,7 @@ denormalize <- function(norm, p1, p2, normFactors){
 loop <- read.delim(opt$loop_file, header = FALSE)
 loop <- as.data.frame(loop)
 colnames(loop) <- c("achr", "abin_start", "abin_end", "bchr", "bbin_start", "bbin_end",
-                       "bin_length", "loop_pval")
+                    "bin_length", "loop_pval")
 #assign new bin length values to make it a number and not a character
 loop$distance <- abs(loop$abin_start - loop$bbin_start)
 
@@ -409,6 +352,10 @@ noise_fxn <- splinefun(noise)
 #norm_factors
 nfact <- read.delim(opt$norm_factors)
 
+#real_data
+real_data <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/count_matrix_chr20_norm.txt", header = TRUE)
+
+
 #bin_length fix
 #opt$bin_length <- opt$bin_length * 1000
 
@@ -416,7 +363,7 @@ nfact <- read.delim(opt$norm_factors)
 
 loops_to_sim <- get_loop_data(opt$start, opt$end, loop, opt$chrom)
 
-non_bg <- get_areas_in_tads_flares_loops(loops_to_sim, opt$bin_length, flares = FALSE, tads = TRUE)
+non_bg <- get_areas_in_tads_flares_loops(loops_to_sim, real_data, opt$bin_length, flares = FALSE, tads = TRUE)
 
 #go through and add values to the sim matrix
 #for(i in rownames(sim_mat)) {
@@ -435,9 +382,8 @@ for(i in rownames(mean_mat)) {
 }
 
 #Get the actual data
-real_data <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/count_matrix_chr20_norm.txt", header = TRUE)
-#opt$start <- 48500000
-#opt$end <- 50100000
+#opt$start <- 48700000
+#opt$end <- 49200000
 figure_mat <- real_data[real_data$Bin1 >= opt$start & real_data$Bin2 <= opt$end, c("Bin1", "Bin2", "Signal") ]
 
 #hicp <- create_hic_heatmap(mean_mat,sim_mat, opt$chrom, opt$start, opt$end, opt$bin_length)

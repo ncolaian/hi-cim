@@ -114,37 +114,55 @@ real_data$distance <- abs(real_data$Bin2 - real_data$Bin1)/10000
 real_data <- na.omit(real_data)
 
 real_tad <- real_data[real_data$Domains > 0,]
-real_flare <- real_data[real_data$Flare_0 > 0 | real_data$Flare_1_in > 0 | real_data$Flare_2_in > 0 | real_data$Flare_1_out > 0 | real_data$Flare_2_out > 0, ]
+real_flare <- real_data[(real_data$Flare_0 > 0 | real_data$Flare_1_in > 0 | real_data$Flare_2_in > 0 | real_data$Flare_1_out > 0 | real_data$Flare_2_out > 0) & real_data$Loops == 0, ]
 real_bg <- real_data[real_data$Flare_0 == 0 & real_data$Flare_1_in == 0 & real_data$Flare_2_in == 0 &
                        real_data$Flare_1_out == 0 & real_data$Flare_2_out == 0 & real_data$Domains == 0 & real_data$Loops == 0, ]
+real_loop <- real_data[real_data$Loops > 0,]
 
 real_tad <- data.frame(real_tad$distance, real_tad$Signal, "TADs")
 real_flare <- data.frame(real_flare$distance, real_flare$Signal, "Loop&FL")
 real_bg <- data.frame(real_bg$distance, real_bg$Signal, "Background")
+real_loop <- data.frame(real_loop$distance,"Loop", real_loop$Signal)
 
 #get correct names of real data 
 colnames(real_tad) <- c("distance", "signal", "model")
 colnames(real_flare) <- c("distance", "signal", "model")
 colnames(real_bg) <- c("distance", "signal", "model")
+colnames(real_loop) <- c("distance", "model", "mu")
 
 real_tad$model <- as.character(real_tad$model)
 real_flare$model <- as.character(real_flare$model)
 real_bg$model <- as.character(real_bg$model)
+real_loop$model <- as.character(real_loop$model)
 
 #real_tad <- ddply(real_tad, .(distance,model), summarize, pixels = NROW(signal) ,mean_sig = mean(signal))
 #real_flare <- ddply(real_flare, .(distance,model), summarize, pixels = NROW(signal) ,mean_sig = mean(signal))
 #real_bg <- ddply(real_bg, .(distance,model), summarize, pixels = NROW(signal) ,mean_sig = mean(signal))
 
 #bin real data
-real_tad <- bin_things(real_tad, 192)
-real_flare <- bin_things(real_flare,192)
-real_bg <- bin_things(real_bg,192)
+real_tad <- bin_things(real_tad, 191)
+real_flare <- bin_things(real_flare,191)
+real_bg <- bin_things(real_bg,191)
 
-fit <- fit_distributions(real_tad, real_flare, real_bg, 192)
+fit <- fit_distributions(real_tad, real_flare, real_bg, 191)
 
-max(real_bg$distance)
-ggplot(fit, aes(x=distance, y=mu, col=model))+
-  geom_line()
+#Plot the means
+fit <- data.frame(fit$distance, fit$model, fit$mu)
+colnames(fit) <- c("distance", "model", "mu")
+fit$model <- as.character(fit$model)
+fit$model[fit$model == "Loop&FL"] <- "Flares"
+
+#combine the loops
+real_loop <- ddply(real_loop, .(distance,model), summarise, mu = mean(mu))
+fit <- rbind(fit,real_loop)
+
+ggplot(fit, aes(x=distance, y=log(mu), col=model))+
+  geom_line()+
+  ggtitle("Normalized Mean Counts Per Pixel vs Distance")+
+  theme( plot.title = element_text(hjust = .5) )+
+  labs( x="Distance (Mb)", y= "Log(Mean)", color="Feature")
+  
+  
 hist(real_bg$signal[real_bg$distance==150])
 
 outer <- "/Users/ncolaian/Documents/phanstiel_lab/data/"
@@ -174,10 +192,13 @@ tad1_b <- bin_things(tad1, 146)
 tad2_b <- bin_things(tad2,146)
 tad_great_b <- bin_things(tad_great,146)
 fit <- fit_distributions(tad1_b, tad2_b, tad_great_b, 146)
-fit$model[fit$model == "Loop&FL"] <- "TAD2"
-fit$model[fit$model == "Background"] <- "TAD_more"
+fit$model[fit$model == "Loop&FL"] <- "2 TADs"
+fit$model[fit$model == "Background"] <- "3+ TADs"
 ggplot(fit, aes(x=distance, y=log(mu), col=model))+
-  geom_line()
+  geom_line()+
+  ggtitle("Normalized Mean Counts Per Pixel vs Distance")+
+  theme( plot.title = element_text(hjust = .5) )+
+  labs( x="Distance (Mb)", y= "Log(Mean)", color="Number of TADs")
 
 #Checking the point to cut off small vs large
 fit1 <- fit[fit$model == "TADs",]
