@@ -166,7 +166,6 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 			matrix_dict[lists_of_lists_starts_stops[i][j]][lists_of_lists_starts_stops[i+1][j]][count] += 1
 			determine_pair_uniq[pair] = 1
 		count -= 1
-		print(test)
 	
 	return(matrix_dict)
 
