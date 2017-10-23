@@ -224,7 +224,7 @@ def get_flare_locations( starts, ends, bin_size ):
 def get_flare_vals_in_between( start, end, bs ):
 	start_tot = []
 	end_tot = []
-	for i in range(start, end+bs, bs):
+	for i in range(start, end, bs):
 		start_tot.append(start)
 		end_tot.append(i)
 	
