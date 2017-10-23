@@ -250,28 +250,39 @@ add_mean_value <- function(x,y, full_matrix, distr, tad_distr, tad_loop_dist, ve
     if (dist > max(tad_distr$distance) ) {
       dist <- max(tad_distr$distance)
     }
+    
+    #get the fold change
+    t_fact <- tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TAD2"]/
+                   tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TADs"]
+    
+    
     t_val <- 0
     if(num_tads == 1) {
       t_val <- t_val + tad_loop_dist$mu[tad_loop_dist$distance == dist & tad_loop_dist$model == loop]
     }
-    else if ( num_tads == 2) {
-      #Take into account of amount of loops
-      t_fact <- (tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TAD2"]/
-                   tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TADs"])
-      
-      #take into account loop dist associated with pixel
-      t_val <- t_val + t_fact*tad_loop_dist$mu[tad_loop_dist$distance == dist & tad_loop_dist$model == loop]
-    }
     else {
-      #Take into account of amount of loops
-      t_fact <- (tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TAD_more"]/
-                   tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TADs"])
-      #take into account loop dist associated with pixel
-      if(t_fact < 1) {
-        t_fact <- 1/t_fact
-      }
+      t_fact <- get_fold_change(num_tads, t_fact)
       t_val <- t_val + t_fact*tad_loop_dist$mu[tad_loop_dist$distance == dist & tad_loop_dist$model == loop]
     }
+    
+    # else if ( num_tads == 2) {
+    #   #Take into account of amount of loops
+    #   t_fact <- (tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TAD2"]/
+    #                tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TADs"])
+    #   
+    #   #take into account loop dist associated with pixel
+    #   t_val <- t_val + t_fact*tad_loop_dist$mu[tad_loop_dist$distance == dist & tad_loop_dist$model == loop]
+    # }
+    # else {
+    #   #Take into account of amount of loops
+    #   t_fact <- (tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TAD_more"]/
+    #                tad_distr$mu[tad_distr$distance == dist & tad_distr$model == "TADs"])
+    #   #take into account loop dist associated with pixel
+    #   if(t_fact < 1) {
+    #     t_fact <- 1/t_fact
+    #   }
+    #   t_val <- t_val + t_fact*tad_loop_dist$mu[tad_loop_dist$distance == dist & tad_loop_dist$model == loop]
+    # }
     
     value <- value + t_val
     dist <- abs((y-x)/bl)
@@ -377,6 +388,21 @@ denormalize <- function(norm, p1, p2, normFactors){
   norm.denorm = normFactors[p1,]*normFactors[p2,]*norm
   
   return(norm.denorm)
+}
+
+get_fold_change <- function(tad_num, factor_t) {
+  if ( tad_num == 2) {
+    return(factor_t)
+  }
+  #1 is normal and 2 is the factor being passed
+  tad_num <- tad_num - 2
+  sqr_rt_num <- factor_t
+  value <- factor_t
+  for( i in seq(1, tad_num) ) {
+    sqr_rt_num <- sqrt(sqr_rt_num)
+    value <- value + ((sqr_rt_num^2)-1)
+  }
+  return(value)
 }
 
 

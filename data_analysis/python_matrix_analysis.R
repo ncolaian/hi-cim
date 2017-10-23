@@ -106,6 +106,36 @@ bin_things <- function(df,bin_total) {
   return(df)
 }
 
+get_log_fold_changes <- function(means_df) {
+  types <- unique(means_df$model)
+  return_df_distance <- c()
+  return_df_model <- c()
+  return_df_fold_change <- c()
+  
+  #compares each type of moel to each other at each distance
+  for(i in seq(1,length(types)) ) {
+    for ( j in seq(1,length(types)) ) {
+      if ( i == j ) next # Handles comparing it to itself
+      #find max distance that both models have values for
+      maxi <- min(c(max(means_df$distance[means_df$model == types[i]]), max(means_df$distance[means_df$model == types[j]])) )
+      
+      #go through and get fold change for each distance
+      for( d in seq(0,maxi) ) {
+        fc <- ( (means_df$mu[means_df$model == types[i] & means_df$distance == d])/(means_df$mu[means_df$model == types[j] & means_df$distance == d]) )
+        return_df_distance <- append(return_df_distance, d)
+        return_df_model <- append(return_df_model, paste(types[i], "/", types[j], sep = ""))
+        return_df_fold_change <- append(return_df_fold_change, as.numeric(fc))
+      }
+    }
+  }
+  return_df <- data.frame(return_df_distance, return_df_model, return_df_fold_change)
+  colnames(return_df) <- c("distance", "model", "fold_change")
+  return_df$distance <- as.integer(return_df$distance)
+  return_df$model <- as.character(return_df$model)
+  return_df$fold_change <- as.numeric(return_df$fold_change)
+  return( na.omit(return_df) )
+}
+
 
 
 #WORK WITH NEW DATAFRAME
@@ -174,6 +204,7 @@ tad1 <- real_data[real_data$Domains == 1,]
 tad2 <- real_data[real_data$Domains == 2,]
 tad_great <- real_data[real_data$Domains > 2,]
 
+
 tad1 <- data.frame(tad1$distance, tad1$Signal, "TADs")
 tad2 <- data.frame(tad2$distance, tad2$Signal, "Loop&FL")
 tad_great <- data.frame(tad_great$distance, tad_great$Signal, "Background")
@@ -194,11 +225,24 @@ tad_great_b <- bin_things(tad_great,146)
 fit <- fit_distributions(tad1_b, tad2_b, tad_great_b, 146)
 fit$model[fit$model == "Loop&FL"] <- "2 TADs"
 fit$model[fit$model == "Background"] <- "3+ TADs"
+
+#fold change analysis
+fold_changes <- get_log_fold_changes(fit)
+
+#subset the fold changes I want
+wanted_fold_changes <- fold_changes[fold_changes$model == "2 TADs/TADs" | fold_changes$model == "3+ TADs/2 TADs",]
+
+#plot original fit models to investigate mean pix values over distance with differing tad amounts
 ggplot(fit, aes(x=distance, y=log(mu), col=model))+
   geom_line()+
   ggtitle("Normalized Mean Counts Per Pixel vs Distance")+
   theme( plot.title = element_text(hjust = .5) )+
   labs( x="Distance (Mb)", y= "Log(Mean)", color="Number of TADs")
+
+#Plot the fold changes over distance
+ggplot(wanted_fold_changes, aes(x=distance, y=fold_change, col=model))+
+  geom_line()
+  
 
 #Checking the point to cut off small vs large
 fit1 <- fit[fit$model == "TADs",]
