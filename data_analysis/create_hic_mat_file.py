@@ -216,7 +216,7 @@ def get_flare_locations( starts, ends, bin_size ):
 		flare_s, flare_e = get_flare_vals_in_between(starts[i], ends[i], bin_size)
 		line_flares_s.extend(flare_s)
 		line_flares_e.extend(flare_e)
-		
+		print( str(len(two_out_e)) + "\t" + str(len(two_in_e)) + "\t" + str(len(one_out_e)) + "\t" + str(len(one_in_e)) + "\n" )
 		
 	return([two_out_flares_s, two_out_flares_e, two_in_flares_s, two_in_flares_e, one_out_flares_s, one_out_flares_e,
 			one_out_flares_s, one_out_flares_e, line_flares_s, line_flares_e])
