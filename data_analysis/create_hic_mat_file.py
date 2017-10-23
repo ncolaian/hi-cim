@@ -158,18 +158,17 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 	count = 7;
 	for i in range(0, len(lists_of_lists_starts_stops), 2):
 		determine_pair_uniq = {}
+		test = 0;
 		for j in range(len(lists_of_lists_starts_stops[i])):
 			pair = str(lists_of_lists_starts_stops[i][j]) + "-" + str(lists_of_lists_starts_stops[i+1][j])
 			if ( pair in determine_pair_uniq ):
 				next
-				
-			if ( lists_of_lists_starts_stops[i+1][j] not in matrix_dict[lists_of_lists_starts_stops[i][j]] ) :
-				print( str(lists_of_lists_starts_stops[i+1][j]) + "-" + str(lists_of_lists_starts_stops[i][j]) + "\n")
-				
 			
 			matrix_dict[lists_of_lists_starts_stops[i][j]][lists_of_lists_starts_stops[i+1][j]][count] += 1
 			determine_pair_uniq[pair] = 1
+			test += 1
 		count -= 1
+		print(test)
 	
 	return(matrix_dict)
 
