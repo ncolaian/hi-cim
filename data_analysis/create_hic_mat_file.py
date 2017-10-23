@@ -232,7 +232,7 @@ def get_flare_locations( starts, ends, bin_size ):
 		line_flares_e.extend(flare_e)
 		
 	return([two_out_flares_s, two_out_flares_e, two_in_flares_s, two_in_flares_e, one_out_flares_s, one_out_flares_e,
-			one_out_flares_s, one_out_flares_e, line_flares_s, line_flares_e])
+			one_in_flares_s, one_in_flares_e, line_flares_s, line_flares_e])
 
 def get_flare_vals_in_between( start, end, bs ):
 	start_tot = []
