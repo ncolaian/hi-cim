@@ -157,8 +157,13 @@ def add_features( chrom, loops_f, matrix_dict, bin_size ):
 	lists_of_lists_starts_stops = get_flare_locations(loop_list_start, loop_list_end, bin_size)
 	count = 7;
 	for i in range(0, len(lists_of_lists_starts_stops), 2):
+		determine_pair_uniq = {}
 		for j in range(len(lists_of_lists_starts_stops[i])):
+			pair = str(lists_of_lists_starts_stops[i][j]) + "-" + str(lists_of_lists_starts_stops[i+1][j])
+			if ( pair in determine_pair_uniq ):
+				next
 			matrix_dict[lists_of_lists_starts_stops[i][j]][lists_of_lists_starts_stops[i+1][j]][count] += 1
+			determine_pair_uniq[pair] = 1
 		count -= 1
 	
 	return(matrix_dict)
@@ -216,10 +221,6 @@ def get_flare_locations( starts, ends, bin_size ):
 		flare_s, flare_e = get_flare_vals_in_between(starts[i], ends[i], bin_size)
 		line_flares_s.extend(flare_s)
 		line_flares_e.extend(flare_e)
-		print( two_out_flares_e )
-		print( two_in_flares_e )
-		print( one_out_flares_e )
-		print( one_in_flares_e )
 		
 	return([two_out_flares_s, two_out_flares_e, two_in_flares_s, two_in_flares_e, one_out_flares_s, one_out_flares_e,
 			one_out_flares_s, one_out_flares_e, line_flares_s, line_flares_e])
