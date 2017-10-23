@@ -87,8 +87,9 @@ create_dist_signal <- function(dataframe, by_val) {
   dist_matrix <- matrix(ncol = 6)
   colnames(dist_matrix) <- c("distance", "model", "theta", "mu", "shape", "rate")
   dist_matrix <- as.data.frame(dist_matrix)
+  maxi <- max(dataframe$distance)
   
-  for( i in seq(0,180,by = by_val) ) {
+  for( i in seq(0,maxi,by = by_val) ) {
     dataframe_part <- dataframe[dataframe$Domain_dists > i & dataframe$Domain_dists <= (i+by_val),]
     dataframe_part <- data.frame(dataframe_part$distance, dataframe_part$Signal, paste(as.character(i), "-", as.character(i+by_val), sep = ""))
     colnames(dataframe_part) <- c("distance", "signal", "model")
@@ -175,3 +176,28 @@ ggplot(new_fit, aes(x=distance, y=mu, col=model))+
 outer <- "/Users/ncolaian/Documents/phanstiel_lab/data/"
 print_out_data("tad_sig_loop_dist", new_fit, outer)
 
+
+#This code is for looking at the flares
+real_flare <- real_data[real_data$Flare_0 > 0 | real_data$Flare_1_in > 0 | real_data$Flare_2_in > 0 | real_data$Flare_1_out > 0 | real_data$Flare_2_out > 0, ]
+real_flare <- real_flare[,c("Signal", "distance", "Flare_0", "Flare_1_in", "Flare_1_out", "Flare_2_in", "Flare_2_out", "Domain_dists")]
+#just look at 0 flares
+zero_flare <- real_data[real_data$Domains ==1 & real_data$Flare_0 == 1 & real_data$Flare_1_in == 0 & real_data$Flare_2_in == 0 & real_data$Flare_1_out == 0 & real_data$Flare_2_out == 0, ]
+
+real_flare <- melt(real_flare, id.vars = c("Signal", "distance","Domain_dists"))
+real_flare$variable <- as.character(real_flare$variable)
+real_flare$value[real_flare$value == 0] <- NA
+real_flare <- na.omit(real_flare)
+
+zero_flare$Domain_dists <- as.integer(gsub(",","",zero_flare$Domain_dists))
+rf_0 <- create_dist_signal(zero_flare, 40)
+
+
+ggplot(real_flare, aes(distance, log(Signal), col = variable)) +
+  geom_line()
+
+ggplot(rf_0, aes(x=distance, y=mu, col=model))+
+  geom_line()+
+  ggtitle("Flares 0 Away Signal vs Distance")+
+  theme( plot.title = element_text(hjust = .5) )+
+  labs( x="Pixel Distance (Mb)", y= "Signal", col = "Loop Distance")
+  scale_y_continuous(limits = c(0,300))

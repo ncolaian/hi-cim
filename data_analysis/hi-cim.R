@@ -227,10 +227,10 @@ add_mean_value <- function(x,y, full_matrix, distr, tad_distr, tad_loop_dist, ve
   }
   
   value <- 0;
-  if(num_loops > 0) {
-    loop_val <- distr$mu[distr$distance == 0 & distr$model == "Loop&FL"]
-    value <- value + loop_val
-  }
+  # if(num_loops > 0) {
+  #   loop_val <- distr$mu[distr$distance == 0 & distr$model == "Loop&FL"]
+  #   value <- value + loop_val
+  # }
   
   if(num_flares > 0) {
     bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
@@ -399,10 +399,53 @@ get_fold_change <- function(tad_num, factor_t) {
   sqr_rt_num <- factor_t
   value <- factor_t
   for( i in seq(1, tad_num) ) {
-    sqr_rt_num <- sqrt(sqr_rt_num)
-    value <- value + ((sqr_rt_num^2)-1)
+    sqr_rt_num <- log(sqr_rt_num)
+    value <- value + sqr_rt_num
+    sqr_rt_num <- sqr_rt_num + 1
   }
   return(value)
+}
+
+add_loops <- function(sande, dataframe, tad_dist, bl) {
+  split <- strsplit(sande, ":")
+  start <- split[1]
+  end <- split[2]
+  
+  full_tad <- get_tads(start,end, bl, fl=FALSE)
+  std_away <- c()
+  for( i in full_tad ) {
+    starty <- strsplit(i, ":")
+    endy <- starty[2]
+    starty <- starty[1]
+    dist <- (end - start)/bl
+    
+    sig <- dataframe[paste(starty,"_lab",""), paste(endy,"_lab","")]
+    gam_std <- sqrt(tad_dist$shape[tad_dist$distance == dist]/((tad_dist$rate[tad_dist$distance == dist])^2))
+    std_away <- append(std_away, ((sig - tad_dist$mu[tad_dist$distance == dist])/gam_std))
+  }
+  
+  median_std <- median(std_away)
+  loop_val <- tad_signal_vs_loop(median_std)
+  
+  #change loop pixel
+  dataframe[paste(start,"_lab",""), paste(end,"_lab","")] <- loop_val
+  
+  #change the pixels around the loop
+  dataframe[paste(start-1,"_lab",""), paste(end,"_lab","")] <- dataframe[paste(start-1,"_lab",""), paste(end,"_lab","")] + as.integer(((loop_val - dataframe[paste(start-1,"_lab",""), paste(end,"_lab","")])*(2/3)))
+  dataframe[paste(start+1,"_lab",""), paste(end,"_lab","")] <- dataframe[paste(start+1,"_lab",""), paste(end,"_lab","")] + as.integer(((loop_val - dataframe[paste(start+1,"_lab",""), paste(end,"_lab","")])*(2/3)))
+  dataframe[paste(start,"_lab",""), paste(end-1,"_lab","")] <- dataframe[paste(start,"_lab",""), paste(end-1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start,"_lab",""), paste(end-1,"_lab","")])*(2/3)))
+  dataframe[paste(start,"_lab",""), paste(end+1,"_lab","")] <- dataframe[paste(start,"_lab",""), paste(end+1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start,"_lab",""), paste(end+1,"_lab","")])*(2/3)))
+  
+  #diganally next to loop
+  dataframe[paste(start-1,"_lab",""), paste(end-1,"_lab","")] <- dataframe[paste(start-1,"_lab",""), paste(end-1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start-1,"_lab",""), paste(end-1,"_lab","")])/3))
+  dataframe[paste(start-1,"_lab",""), paste(end+1,"_lab","")] <- dataframe[paste(start-1,"_lab",""), paste(end+1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start-1,"_lab",""), paste(end+1,"_lab","")])/3))
+  dataframe[paste(start+1,"_lab",""), paste(end-1,"_lab","")] <- dataframe[paste(start+1,"_lab",""), paste(end-1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start+1,"_lab",""), paste(end-1,"_lab","")])/3))
+  dataframe[paste(start+1,"_lab",""), paste(end+1,"_lab","")] <- dataframe[paste(start+1,"_lab",""), paste(end+1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start+1,"_lab",""), paste(end+1,"_lab","")])/3))
+}
+
+tad_signal_vs_loop <- function(x) {
+  val <- .258379 + .176503*log(x) + rnorm(1, mean = 0, sd = .1169^2)
+  return(val)
 }
 
 
@@ -453,6 +496,11 @@ non_bg <- get_areas_in_tads_flares_loops(loops_to_sim, opt$bin_length, flares = 
 mean_mat <- create_sim_matrix(opt$start, opt$end, opt$bin_length)
 for(i in rownames(mean_mat)) {
   mean_mat[i,] <- sapply(colnames(mean_mat), function(x) { add_mean_value(as.integer(gsub( "_lab",replacement = "", x)), as.integer(gsub("_lab",replacement = "",i)), mean_mat, distr_data, tad_distr_data,tad_loop_dist, non_bg, opt$bin_length)} )
+}
+
+#add loop values
+for(i in (non_bg[[1]])) {
+  add_loops(i,mean_mat)
 }
 
 #Normalize Data

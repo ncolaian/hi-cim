@@ -3,6 +3,7 @@
 library(MASS)
 library(ggplot2)
 library(plyr)
+library(reshape2)
 
 bin_things <- function(df,bin_total) {
   combined <- c()
@@ -211,11 +212,11 @@ get_tads <- function(starting, ending, bl, fl=TRUE) {
   
   return(vec)
 }
-  
-  return(vec)
-}
+#file on personal laptop
+#real_data <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/count_matrix_chr20_old.txt", header = TRUE)
+#file on shared computer
+real_data <- read.delim("/Users/phanstiel4/Documents/code_rep/data/count_matrix_chr20.txt", header = TRUE)
 
-real_data <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/count_matrix_chr20_old.txt", header = TRUE)
 real_data$distance <- abs(real_data$Bin2 - real_data$Bin1)/10000
 real_data <- na.omit(real_data)
 real_data$Domain_dists <- as.character(real_data$Domain_dists)
@@ -288,4 +289,8 @@ ggplot(new_fit, aes(x=distance, y=log(mu), col=model))+
 
 outer <- "/Users/ncolaian/Documents/phanstiel_lab/data/"
 print_out_data("tad_sig_loop_dist", new_fit, outer)
+
+
+
+
 
