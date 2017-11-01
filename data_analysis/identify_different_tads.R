@@ -11,7 +11,10 @@ library(plyr)
 get_indiv_tad_matrix <- function(pix_row, full_pix, back_dist) {
   full_pix <- full_pix[full_pix$Bin1 >= pix_row$Bin1[1] & full_pix$Bin2 <= pix_row$Bin2[1] &
                          !(full_pix$Bin1 == pix_row$Bin1[1] && full_pix$Bin2 == pix_row$Bin2[1]),]
-  full_pix <- full_pix[full_pix$Domains == 1,]
+  
+  #This looks at only the pixels in 1 tad
+  #full_pix <- full_pix[full_pix$Domains == 1,]
+  
   if ( nrow(full_pix) == 0 ) {
     return(full_pix)
   }
@@ -23,7 +26,7 @@ get_indiv_tad_matrix <- function(pix_row, full_pix, back_dist) {
     full_pix$Signal[i] <- (full_pix$Signal[i]-back_dist$mu[back_dist$distance == full_pix$Dist[i]])/gam_std
   }
   full_pix <- full_pix[,c("Dist", "Signal")]
-  full_pix <- ddply(full_pix, .(Dist), summarise, Signal=median(Signal))
+  #full_pix <- ddply(full_pix, .(Dist), summarise, Signal=median(Signal))
   return(full_pix)
 }
 
@@ -69,9 +72,13 @@ t_test_l <- vector("list", length = nrow(loop_pix))
 for(i in seq(1,(nrow(loop_pix)))) {
   print(i)
   tad_vals[[i]] <- get_indiv_tad_matrix(loop_pix[i,], na.omit(pixel_vals), t_distr)
+  if (nrow(tad_vals[[i]]) == 0) next
+  #plot(tad_vals[[i]]$Dist, tad_vals[[i]]$Signal)
   #samp_vals[[i]] <- get_distributed_tads(tad_vals[[i]], t_distr)
   #t_test_l[[i]] <- t.test(tad_vals[[i]], samp_vals[[i]])
 }
+tad_vals[[1]]
+plot(tad_vals[[2]]$Dist,tad_vals[[2]]$Signal)
 vec <- c()
 for(i in seq(1,(nrow(loop_pix)))) {
   if(t_test_l[[i]]$p.value < .5) {
@@ -122,25 +129,34 @@ for ( i in seq(1:length(loop_pix$Signal)) ) {
 tad_v_loop <- data.frame(tad_sig, loop_pix$Signal, ((loop_pix$Bin2-loop_pix$Bin1)/10000))
 colnames(tad_v_loop) <- c("Tad_Signal", "Loop_Signal", "Distance")
 tad_v_loop <- na.omit(tad_v_loop)
-ggplot(tad_v_loop, aes(log(Loop_Signal), Tad_Signal))+
+ggplot(tad_v_loop, aes(Tad_Signal, Loop_Signal ))+
   geom_point()+
   geom_smooth(method = lm)+
-  ggtitle("Loop Signal vs Median STD Away From Average TADS")+
+  ggtitle("Median Standard Deviation from the Mean TAD Can Predict Loop Signal")+
   theme( plot.title = element_text(hjust = .5) )+
-  labs( x="log(Signal)", y= "Median STD")
+  labs( x="Median SD from Mean TAD", y= "Loop Signal")
 
-cor(log(tad_v_loop$Loop_Signal),y = tad_v_loop$Tad_Signal, method = "pearson")
-hist(tad_v_loop$Distance)
+cor(tad_v_loop$Tad_Signal,y = (tad_v_loop$Loop_Signal), method = "pearson")
+hist(tad_v_loop$Loop_Signal, breaks = 20)
+hist(tad_v_loop$Tad_Signal, breaks = 20)
 trial <- tad_v_loop
 trial$Loop_Signal <- log(trial$Loop_Signal)
-tvl <- lm(Tad_Signal ~ Loop_Signal , trial)
+tvl <- lm(Loop_Signal ~ Tad_Signal , trial)
 summary(tvl)
 plot( tad_v_loop$Distance, tvl$fitted.values)
-predict(tvl,data.frame(Distance=c(30,40,10)))
+predict(tvl,data.frame(Tad_Signal=c(1,1.1,1.2)))
 tad_signal_vs_loop <- function(x) {
   val <- .258379 + .176503*log(x) + rnorm(1, mean = 0, sd = .1169^2)
   return(val)
 }
+
+#function to predict loop value
+tsl <- function(x) {
+  val <- 100.116700 + 109.978511*x
+  return(val)
+}
+tsl(1.1)
+
 fun(500)
 par(mfrow=c(2,2))
 plot(tvl) 

@@ -6,6 +6,7 @@ library(getopt)
 library(Sushi,lib.loc="/nas02/home/n/c/ncolaian/R/x86_64-pc-linux-gnu-library/3.2")
 library(Sushi)# for testing
 library(MASS)
+library(plyr)
 
 #Handles input and puts the options passed into the program into a matrix
 #Matrix makes it easier to look up values.
@@ -54,6 +55,7 @@ get_loop_data <- function(starting, ending, loop, chr) {
 }
 
 get_areas_in_tads_flares_loops <- function(need_loop, bl,flares=TRUE, tads=TRUE) {
+  options(scipen = 999)
   loop_vec <- c()
   flare_vec <- c()
   tad_vec <- c()
@@ -164,38 +166,32 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
   value <- 0;
   value_holder <- c()
   if(num_loops > 0) {
-    val_vec <- rgamma(num_loops, as.numeric(distr$scale[distr$distance == 0 & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == 0 & distr$model == "Loop&FL"]))
-    value_holder <- append(value_holder, mean(round(val_vec))*2)
+    value <- distr$mu[distr$distance == 0 & distr$model == "Loop&FL"]
+    #value <- append(value_holder, mean(round(val_vec))*2)
   }
   
-  if(num_flares > 0) {
-    bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
-    flare_val <- distr$mu[distr$distance == dist & distr$model == "Loop&FL"]
-    factor_v <- (flare_val/bg_val)^num_flares
-    
-    val_vec <- rgamma(num_flares, as.numeric(distr$scale[distr$distance == dist & distr$model == "Loop&FL"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Loop&FL"]))
-    value_holder <- append(value_holder, mean(round(val_vec))^factor_v)
+  else if(num_flares > 0) {
+    value <- distr$mu[distr$distance == dist & distr$model == "Loop&FL"]
+    #value_holder <- append(value_holder, mean(round(val_vec))^factor_v)
   }
   
-  if(num_tads > 0) {
-    bg_val <- distr$mu[distr$distance == dist & distr$model == "Background"]
-    tad_val <- distr$mu[distr$distance == dist & distr$model == "TADs"]
-    factor_v <- (tad_val/bg_val)^num_tads
+  else if(num_tads > 0) {
+    value <- distr$mu[distr$distance == dist & distr$model == "TADs"]
     
-    val_vec <- rgamma(num_tads, as.numeric(distr$scale[distr$distance == dist & distr$model == "TADs"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "TADs"]))
-    value_holder <- append(value_holder, mean(round(val_vec))^factor_v)
+    #val_vec <- rgamma(num_tads, as.numeric(distr$scale[distr$distance == dist & distr$model == "TADs"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "TADs"]))
+    #value_holder <- append(value_holder, mean(round(val_vec))^factor_v)
   }
   
   #this means it is a background pixel
   if(value == 0 && w_bg == TRUE) {
-     val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
-     value_holder <- append(value_holder, sum(as.integer(val_vec)))
+     value <- distr$mu[distr$distance == dist & distr$model == "Background"]
+     #value_holder <- append(value_holder, sum(as.integer(val_vec)))
    }
   #val_vec <- rgamma(1, as.numeric(distr$scale[distr$distance == dist & distr$model == "Background"]), rate = as.numeric(distr$rate[distr$distance == dist & distr$model == "Background"]))
   #value <- value + sum(as.integer(val_vec))
   
   #test for the drawing of only one feature
-  value <- max(value_holder)
+  #value <- max(value_holder)
   
   if(is.na(value)){
     value <- 0
@@ -206,20 +202,14 @@ add_value <- function(x,y, full_matrix, distr, vec_list, bl, w_bg=TRUE) {
 
 add_mean_value <- function(x,y, full_matrix, distr, tad_distr, tad_loop_dist, vec_list, bl, w_bg=TRUE) {
   options(scipen = 10, digits=10)
-  num_loops <- sum((vec_list[[1]] == paste(x,":", y, sep = "")), na.rm = TRUE )
-  if ( num_loops == 0 ){
-    num_loops <- num_loops + sum((vec_list[[1]] == paste(y,":", x, sep = "")), na.rm = TRUE )
+  if (x > y) {
+    return(0)
   }
+  num_loops <- sum((vec_list[[1]] == paste(x,":", y, sep = "")), na.rm = TRUE )
   
   num_flares <- sum((vec_list[[2]] == paste(x,":", y, sep = "")), na.rm = TRUE)
-  if ( num_flares == 0 ){
-    num_flares <- num_flares + sum((vec_list[[2]] == paste(y,":", x, sep = "")), na.rm = TRUE)
-  }
   
   num_tads <- sum((vec_list[[3]] == paste(x,":", y, sep = "")), na.rm = TRUE )
-  if ( num_tads == 0 ){
-    num_tads <- num_tads + sum((vec_list[[3]] == paste(y,":", x, sep = "")), na.rm = TRUE )
-  }
   
   dist <- abs((y-x)/bl)
   if(dist>192){
@@ -227,7 +217,8 @@ add_mean_value <- function(x,y, full_matrix, distr, tad_distr, tad_loop_dist, ve
   }
   
   value <- 0;
-  # if(num_loops > 0) {
+  #Add simple loop pixels
+   #if(num_loops > 0) {
   #   loop_val <- distr$mu[distr$distance == 0 & distr$model == "Loop&FL"]
   #   value <- value + loop_val
   # }
@@ -328,15 +319,19 @@ create_hic_heatmap <- function(matrix1, matrix2, chr, starting, ending, bl, zr=c
 compare_real_hic_heatmap <- function(matrix1, real_mat, chr, starting, ending, bl, zr=c(0,300),
                                legend=T, lab="Simulated Data", sim_v_real=TRUE ) {
   chromo <- paste("chr", chr, sep="")
-
+  #for katie
+  #hcplot <- plotHic2(real_mat, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","dodgerblue2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "top", format = "sparse")
+  
   if ( sim_v_real == FALSE ) {
     hcplot <- plotHic2(matrix1, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","firebrick2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "top", format = "sparse")
   }
   else {
-    vec <- seq(starting, ending, by = bl)
-    colnames(matrix1) <- vec
-    rownames(matrix1) <- vec
-    hcplot <- plotHic2(matrix1, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","firebrick2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "top", format = "full")
+    #vec <- seq(starting, ending, by = bl)
+    #colnames(matrix1) <- vec
+    #rownames(matrix1) <- vec
+    #for katie
+    hcplot <- plotHic2(matrix1, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","dodgerblue2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "top", format = "sparse")
+    
   }
   hcplot <- plotHic2(real_mat, chromo, starting, ending, zrange=zr, palette = colorRampPalette(c("white","firebrick2")), labeltype = "bp", resolution = 10000, plottype = "square", half = "bottom", format = "sparse", add=T)
   labelgenome(chrom=chromo,starting, ending, scale="Mb")
@@ -353,6 +348,9 @@ compare_real_hic_heatmap <- function(matrix1, real_mat, chr, starting, ending, b
 
 denormalize_sample_and_save_new_val <- function(x,y,value,norm_factor,noise_fxn,bl) {
   #Need to add the +1 since the bins start from 0 but indexing starts at 1
+  if ( x > y ) {
+    return(0)
+  }
   if(!(x == 0)) {
     x <- x/bl + 1
   }
@@ -365,7 +363,9 @@ denormalize_sample_and_save_new_val <- function(x,y,value,norm_factor,noise_fxn,
   value <- denormalize(value, x, y, norm_factor)
   
   #Get value considering signal noise
-  value <- rnorm(1, mean = value, sd = sqrt(noise_fxn(value)) )
+  if (value > 2) {
+    value <- rnorm(1, mean = value, sd = sqrt(noise_fxn(value)) )
+  }
   
   #renormalize
   value <- normalize(value, x,y, norm_factor)
@@ -408,46 +408,86 @@ get_fold_change <- function(tad_num, factor_t) {
 
 add_loops <- function(sande, dataframe, tad_dist, bl) {
   split <- strsplit(sande, ":")
-  start <- split[1]
-  end <- split[2]
+  split <- split[[1]]
+  start <- as.integer(split[1])
+  end <- as.integer(split[2])
   
   full_tad <- get_tads(start,end, bl, fl=FALSE)
   std_away <- c()
+  dist_away <- c()
   for( i in full_tad ) {
     starty <- strsplit(i, ":")
-    endy <- starty[2]
-    starty <- starty[1]
-    dist <- (end - start)/bl
-    
-    sig <- dataframe[paste(starty,"_lab",""), paste(endy,"_lab","")]
+    starty <- starty[[1]]
+    endy <- as.integer(starty[2])
+    starty <- as.integer(starty[1])
+    dist <- (endy - starty)/bl
+    sig <- dataframe[match(paste(starty,"_lab",sep=""), row.names(dataframe)), match(paste(endy,"_lab",sep=""), colnames(dataframe))]
     gam_std <- sqrt(tad_dist$shape[tad_dist$distance == dist]/((tad_dist$rate[tad_dist$distance == dist])^2))
+    
     std_away <- append(std_away, ((sig - tad_dist$mu[tad_dist$distance == dist])/gam_std))
+    dist_away <- append(dist_away, dist)
   }
+  mm_df <- data.frame(std_away, dist_away)
+  colnames(mm_df) <- c("STD", "Distance")
+  mm_df <- ddply(mm_df, .(Distance), summarise, STD=median(STD))
+  median_std <- median(mm_df$STD)
+  print(median_std)
   
-  median_std <- median(std_away)
   loop_val <- tad_signal_vs_loop(median_std)
+  print(loop_val)
   
+  #change pixel around loop
+  dataframe <- add_loop_circle(start, end, bl, loop_val, 3, dataframe)
   #change loop pixel
-  dataframe[paste(start,"_lab",""), paste(end,"_lab","")] <- loop_val
-  
-  #change the pixels around the loop
-  dataframe[paste(start-1,"_lab",""), paste(end,"_lab","")] <- dataframe[paste(start-1,"_lab",""), paste(end,"_lab","")] + as.integer(((loop_val - dataframe[paste(start-1,"_lab",""), paste(end,"_lab","")])*(2/3)))
-  dataframe[paste(start+1,"_lab",""), paste(end,"_lab","")] <- dataframe[paste(start+1,"_lab",""), paste(end,"_lab","")] + as.integer(((loop_val - dataframe[paste(start+1,"_lab",""), paste(end,"_lab","")])*(2/3)))
-  dataframe[paste(start,"_lab",""), paste(end-1,"_lab","")] <- dataframe[paste(start,"_lab",""), paste(end-1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start,"_lab",""), paste(end-1,"_lab","")])*(2/3)))
-  dataframe[paste(start,"_lab",""), paste(end+1,"_lab","")] <- dataframe[paste(start,"_lab",""), paste(end+1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start,"_lab",""), paste(end+1,"_lab","")])*(2/3)))
-  
-  #diganally next to loop
-  dataframe[paste(start-1,"_lab",""), paste(end-1,"_lab","")] <- dataframe[paste(start-1,"_lab",""), paste(end-1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start-1,"_lab",""), paste(end-1,"_lab","")])/3))
-  dataframe[paste(start-1,"_lab",""), paste(end+1,"_lab","")] <- dataframe[paste(start-1,"_lab",""), paste(end+1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start-1,"_lab",""), paste(end+1,"_lab","")])/3))
-  dataframe[paste(start+1,"_lab",""), paste(end-1,"_lab","")] <- dataframe[paste(start+1,"_lab",""), paste(end-1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start+1,"_lab",""), paste(end-1,"_lab","")])/3))
-  dataframe[paste(start+1,"_lab",""), paste(end+1,"_lab","")] <- dataframe[paste(start+1,"_lab",""), paste(end+1,"_lab","")] + as.integer(((loop_val - dataframe[paste(start+1,"_lab",""), paste(end+1,"_lab","")])/3))
+  dataframe[match(paste(start,"_lab",sep=""),row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))] <- loop_val
+  return(dataframe)
 }
 
 tad_signal_vs_loop <- function(x) {
-  val <- .258379 + .176503*log(x) + rnorm(1, mean = 0, sd = .1169^2)
+  val <- 100.116700 + 109.978511*x
   return(val)
 }
 
+add_loop_circle <- function(start, end, bl, loop_val, loop_width, dataframe) {
+  for( i in seq(1,loop_width) ) {
+    lab_change <- i*bl
+    print(paste(start-lab_change,"_lab",sep=""))
+    print(dataframe[match(paste(start-lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])
+    #sides but 1 dist diff
+    dataframe[match(paste(start-lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))] <- dataframe[match(paste(start-lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))] + as.integer(((loop_val - dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])*((loop_width-i)/(loop_width+1))))
+    dataframe[match(paste(start+lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))] <- dataframe[match(paste(start+lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))] + as.integer(((loop_val - dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])*((loop_width-i)/(loop_width+1))))
+    dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end-lab_change,"_lab",sep=""),colnames(dataframe))] <- dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end-lab_change,"_lab",sep=""),colnames(dataframe))] + as.integer(((loop_val - dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])*((loop_width-i)/(loop_width+1))))
+    dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end+lab_change,"_lab",sep=""),colnames(dataframe))] <- dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end+lab_change,"_lab",sep=""),colnames(dataframe))] + as.integer(((loop_val - dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])*((loop_width-i)/(loop_width+1))))
+    print(dataframe[match(paste(start-lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])
+    #diagonal but 2 dist diff
+    dataframe[match(paste(start-lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end-lab_change,"_lab",sep=""),colnames(dataframe))] <- dataframe[match(paste(start-lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end-lab_change,"_lab",sep=""),colnames(dataframe))] + as.integer(((loop_val - dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])*((loop_width-i-1)/(loop_width+1))))
+    dataframe[match(paste(start-lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end+lab_change,"_lab",sep=""),colnames(dataframe))] <- dataframe[match(paste(start-lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end+lab_change,"_lab",sep=""),colnames(dataframe))] + as.integer(((loop_val - dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])*((loop_width-i-1)/(loop_width+1))))
+    dataframe[match(paste(start+lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end-lab_change,"_lab",sep=""),colnames(dataframe))] <- dataframe[match(paste(start+lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end-lab_change,"_lab",sep=""),colnames(dataframe))] + as.integer(((loop_val - dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])*((loop_width-i-1)/(loop_width+1))))
+    dataframe[match(paste(start+lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end+lab_change,"_lab",sep=""),colnames(dataframe))] <- dataframe[match(paste(start+lab_change,"_lab",sep=""), row.names(dataframe)), match(paste(end+lab_change,"_lab",sep=""),colnames(dataframe))] + as.integer(((loop_val - dataframe[match(paste(start,"_lab",sep=""), row.names(dataframe)), match(paste(end,"_lab",sep=""),colnames(dataframe))])*((loop_width-i-1)/(loop_width+1))))
+    
+  }
+  return(dataframe)
+}
+
+long_format <- function(matrix) {
+  bin1 <- c()
+  bin2 <- c()
+  signal <- c()
+
+  for( i in rownames(matrix) ) {
+    for(j in colnames(matrix)) {
+      if ( i <= j) {
+        bin1 <- append(bin1, as.integer(gsub( "_lab",replacement = "", i)))
+        bin2 <- append(bin2, as.integer(gsub( "_lab",replacement = "", j)))
+        signal <- append(signal, matrix[c(i), c(j)])
+      }
+    }
+  }
+  return_df <- data.frame(bin1, bin2, signal)
+  colnames(return_df) <- c("pos_1", "pos_2", "signal")
+  
+  return(return_df)
+}
 
 #### MAIN ####
 #loop data
@@ -481,13 +521,13 @@ nfact <- read.delim(opt$norm_factors)
 #bin_length fix
 #opt$bin_length <- opt$bin_length * 1000
 
-#sim_mat <- create_sim_matrix(opt$start, opt$end, opt$bin_length)
+sim_mat <- create_sim_matrix(opt$start, opt$end, opt$bin_length)
 
 loops_to_sim <- get_loop_data(opt$start, opt$end, loop, opt$chrom)
 
-non_bg <- get_areas_in_tads_flares_loops(loops_to_sim, opt$bin_length, flares = FALSE, tads = TRUE)
+non_bg <- get_areas_in_tads_flares_loops(loops_to_sim, opt$bin_length, flares = F, tads = TRUE)
 
-#go through and add values to the sim matrix
+#go through and add values to the sim matrix ***** OUTDATED *****
 #for(i in rownames(sim_mat)) {
 #  sim_mat[i,] <- sapply(colnames(sim_mat), function(x) { add_value(as.integer(gsub( "_lab",replacement = "", x)), as.integer(gsub("_lab",replacement = "",i)), sim_mat, distr_data, non_bg, opt$bin_length)} )
 #}
@@ -495,18 +535,26 @@ non_bg <- get_areas_in_tads_flares_loops(loops_to_sim, opt$bin_length, flares = 
 # mean values used
 mean_mat <- create_sim_matrix(opt$start, opt$end, opt$bin_length)
 for(i in rownames(mean_mat)) {
-  mean_mat[i,] <- sapply(colnames(mean_mat), function(x) { add_mean_value(as.integer(gsub( "_lab",replacement = "", x)), as.integer(gsub("_lab",replacement = "",i)), mean_mat, distr_data, tad_distr_data,tad_loop_dist, non_bg, opt$bin_length)} )
+  mean_mat[i,] <- sapply(colnames(mean_mat), function(x) { add_mean_value(as.integer(gsub( "_lab",replacement = "", i)), as.integer(gsub("_lab",replacement = "",x)), mean_mat, distr_data, tad_distr_data,tad_loop_dist, non_bg, opt$bin_length)} )
 }
 
 #add loop values
 for(i in (non_bg[[1]])) {
-  add_loops(i,mean_mat)
+  mean_mat <- add_loops(i,mean_mat, distr_data[distr_data$model == "TADs",], opt$bin_length)
 }
 
 #Normalize Data
 for(i in rownames(mean_mat)) {
   mean_mat[i,] <- sapply(colnames(mean_mat), function(x) { denormalize_sample_and_save_new_val(as.integer(gsub( "_lab",replacement = "", i)), as.integer(gsub("_lab",replacement = "",x)), mean_mat[i,x],nfact, noise_fxn, opt$bin_length)} )
 }
+
+#for first portion
+#for(i in rownames(sim_mat)) {
+#  sim_mat[i,] <- sapply(colnames(sim_mat), function(x) { denormalize_sample_and_save_new_val(as.integer(gsub( "_lab",replacement = "", i)), as.integer(gsub("_lab",replacement = "",x)), sim_mat[i,x],nfact, noise_fxn, opt$bin_length)} )
+#}
+
+mean_mat <- long_format(mean_mat)
+#sim_mat <- long_format(sim_mat)
 
 #Get the actual data
 real_data <- read.delim("/Users/ncolaian/Documents/phanstiel_lab/data/count_matrix_chr20_norm.txt", header = TRUE)

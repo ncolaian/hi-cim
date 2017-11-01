@@ -88,16 +88,19 @@ create_dist_signal <- function(dataframe, by_val) {
   colnames(dist_matrix) <- c("distance", "model", "theta", "mu", "shape", "rate")
   dist_matrix <- as.data.frame(dist_matrix)
   maxi <- max(dataframe$distance)
+  order_model <- c()
   
   for( i in seq(0,maxi,by = by_val) ) {
     dataframe_part <- dataframe[dataframe$Domain_dists > i & dataframe$Domain_dists <= (i+by_val),]
     dataframe_part <- data.frame(dataframe_part$distance, dataframe_part$Signal, paste(as.character(i), "-", as.character(i+by_val), sep = ""))
+    order_model <- append(order_model, paste(as.character(i), "-", as.character(i+by_val), sep = ""))
     colnames(dataframe_part) <- c("distance", "signal", "model")
     dataframe_part <- bin_things(dataframe_part, max(dataframe_part$distance))
     dataframe_part <- fit_single_distribution(dataframe_part, max(dataframe_part$distance))
-    dataframe_part$model <- as.character(i+by_val)
+    dataframe_part$model <- as.character(paste(as.character(i), "-", as.character(i+by_val), sep = ""))
     dist_matrix <- rbind(dist_matrix, dataframe_part)
   }
+  dist_matrix$model <- factor(dist_matrix$model, order_model)
   
   return(na.omit(dist_matrix))
  }
@@ -167,9 +170,9 @@ new_fit <- create_dist_signal(tad1,20)
 
 ggplot(new_fit, aes(x=distance, y=mu, col=model))+
   geom_line()+
-  ggtitle("Tad Signal vs Distance")+
+  ggtitle("TAD Signal Decay is Dependant on Loop Size")+
   theme( plot.title = element_text(hjust = .5) )+
-  labs( x="Distance (Mb)", y= "Log(Loop Signal)", col = "Loop Distance")+
+  labs( x="Linear Genomic Distance (Mb)", y= "Normalized Mean Counts", col = "Loop Distance (Mb)")+
   scale_y_continuous(limits = c(0,300))
 
 

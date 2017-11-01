@@ -1,0 +1,65 @@
+This README is going to breifly describe the scripts within this directory
+
+binning_combined_data.R:
+- This was the script used to create the binning algorithm that binned pixel values. Through this we found that you need about 450 pixels to remove most of the noise. This was not used in any of the current simulations, however, the binning algorithm was taken and implemented in many of the later scripts
+
+hi-cim.R:
+- This is the main script to create the hi-c heatmaps and bring together all the decay files to simulate the hi-c data.
+
+You need files/things from the following scripts:
+1) control_loop_distance_tads.R
+2) create_hic_mat_file.py
+3) python_matrix_analysis.R
+4) Normalization file ( describes how the reads were normalized )
+5) Looping File
+
+control_loop_distance_tads.R:
+- This creates a file containing the distance decay values used to simulate TADs created from loops that differ in distance.
+
+You need files from the following scripts:
+1) create_hic_mat_file.py
+
+hi_sim_signal.R
+- This was an exploratory script that looks at tads based on loop signal strength. It was found to not work as expected
+
+count_vs_dist.R
+- This was one of the first scripts to analyze the looping data and analyze the signal decay over distance. This script is deprecated.
+
+identify_different_tads.R:
+- This file analyzes the median tad SD. This also creates the linear model and function used to simulate the strength of the loop pixels
+
+You need files from the following scripts:
+1) create_hic_mat_file.py
+2) python_matrix_analysis.R
+
+create_hic_mat_file.py:
+- This is the main data gathering script. This is where you will input the actual data to charcterize the pixels. It will contain signal values, loop counts, tad counts, and more. This gets everything ready for analysis in R
+
+You need files:
+1) Normalzation file (contains the normalization factors)
+2) Normalized reads file
+3) Loop File
+
+loop_sig_vs_tad_dist_decay.R:
+- Pretty sure this script is depricated
+
+feature_full_sig_distance.pl
+- This is depricated, but was an initial data analysis script. It brought together multiple R scripts to create signal decay files and graphs
+
+predict_distributions.R
+- This was one of the first scripts to fit distributions to the signal values by distance and feature. We found that the signal follows the gamma distribution. This is depricated
+
+get_feature_specific_data.R
+- One of the original matrix building scripts. Depricated
+
+python_matrix_analysis.R
+- The main analysis script. This takes the input from the perl script used to identify the features each pixel is associated with. It creates the signal distance graph and also looks at the difference between 1 and 2 tads at each distance
+
+getting_unnorm_variance.R
+- Creates the file used to add the noise back into the simulated data.
+
+scraping_4_distribution.R
+- Depricated
+
+graph_tot_dist_sig.R
+- Depricated

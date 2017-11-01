@@ -188,9 +188,10 @@ fit <- rbind(fit,real_loop)
 
 ggplot(fit, aes(x=distance, y=log(mu), col=model))+
   geom_line()+
-  ggtitle("Normalized Mean Counts Per Pixel vs Distance")+
-  theme( plot.title = element_text(hjust = .5) )+
-  labs( x="Distance (Mb)", y= "Log(Mean)", color="Feature")
+  ggtitle("Normalized Counts Decrease at Different Rates")+
+  labs( x="Linear Genomic Distance (Mb)", y= "Log(Mean Counts)", color="Feature")+
+  theme( plot.title = element_text(hjust = .5),
+       legend.title = element_text(hjust = .5))
   
   
 hist(real_bg$signal[real_bg$distance==150])
